@@ -1,0 +1,43 @@
+// src/index.js
+import express from "express";
+import dotenv from "dotenv";
+
+// Importar rutas
+import usuarioRoutes from "./routes/usuarioRoutes.js";
+import rolRoutes from "./routes/rolRoutes.js";
+import departamentoRoutes from "./routes/departamentoRoutes.js";
+import grupoRoutes from "./routes/grupoRoutes.js";
+import almacenRoutes from "./routes/almacenRoutes.js";
+import ubicacionRoutes from "./routes/ubicacionRoutes.js";
+import tipoMovimientoRoutes from "./routes/tipoMovimientoRoutes.js";
+import productoRoutes from "./routes/productoRoutes.js";
+import clienteRoutes from "./routes/clienteRoutes.js";
+import proveedorRoutes from "./routes/proveedorRoutes.js";
+
+dotenv.config();
+
+const app = express();
+app.use(express.json());
+
+// --------------------------
+//       RUTAS API
+// --------------------------
+app.use("/api/usuarios", usuarioRoutes);
+app.use("/api/roles", rolRoutes);
+app.use("/api/departamentos", departamentoRoutes);
+app.use("/api/grupos", grupoRoutes);
+app.use("/api/almacenes", almacenRoutes);
+app.use("/api/ubicaciones", ubicacionRoutes);
+app.use("/api/tipos-movimiento", tipoMovimientoRoutes);
+app.use("/api/productos", productoRoutes);
+app.use("/api/clientes", clienteRoutes);
+app.use("/api/proveedores", proveedorRoutes);
+
+// --------------------------
+//          SERVER
+// --------------------------
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Servidor backend corriendo en puerto ${PORT}`);
+});
