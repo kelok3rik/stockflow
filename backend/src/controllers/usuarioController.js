@@ -73,3 +73,59 @@ export const deleteUsuario = async (req, res) => {
     res.status(500).json({ error: 'Error al eliminar el usuario' });
   }
 };
+
+export const loginUsuario = async (req, res) => {
+  const { usuario, clave } = req.body;
+
+  try {
+    const result = await pool.query(
+      'SELECT * FROM usuario WHERE usuario=$1 AND activo=true',
+      [usuario]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ message: 'Usuario no encontrado o inactivo' });
+    }
+
+    const user = result.rows[0];
+
+    if (user.clave !== clave) {
+      return res.status(401).json({ message: 'Contraseña incorrecta' });
+    }
+
+    // Devolver usuario y permisos
+    res.json({
+      id: user.id_usuarios,
+      nombre: user.nombre,
+      usuario: user.usuario,
+      rol: user.id_rol,
+      permisos: {
+        inv_productos: user.inv_productos,
+        inv_almacenes: user.inv_almacenes,
+        inv_ubicaciones: user.inv_ubicaciones,
+        inv_departamentos: user.inv_departamentos,
+        inv_grupos: user.inv_grupos,
+        inv_cotizaciones: user.inv_cotizaciones,
+        inv_compras: user.inv_compras,
+        inv_movimientos: user.inv_movimientos,
+        inv_devoluciones: user.inv_devoluciones,
+        inv_facturacion: user.inv_facturacion,
+        inv_consultas: user.inv_consultas,
+        inv_reportes: user.inv_reportes,
+        cxc_clientes: user.cxc_clientes,
+        cxc_cobros: user.cxc_cobros,
+        cxp_proveedores: user.cxp_proveedores,
+        cxp_pagos: user.cxp_pagos,
+        conf_usuario: user.conf_usuario,
+        conf_roles: user.conf_roles,
+        conf_empresa: user.conf_empresa,
+        conf_moneda: user.conf_moneda,
+        conf_condicion: user.conf_condicion
+      }
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error en el servidor' });
+  }
+};

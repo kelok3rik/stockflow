@@ -1,5 +1,5 @@
 // src/controllers/proveedorController.js
-import pool from "../database/conexion.js";
+import pool from '../database/db.js';
 
 // Obtener todos
 export const getProveedores = async (req, res) => {

@@ -1,10 +1,11 @@
 // src/index.js
 import express from "express";
 import dotenv from "dotenv";
+import cors from "cors";
 
 // Importar rutas
 import usuarioRoutes from "./routes/usuarioRoutes.js";
-import rolRoutes from "./routes/rolRoutes.js";
+import rolRoutes from "./routes/roleRoutes.js";
 import departamentoRoutes from "./routes/departamentoRoutes.js";
 import grupoRoutes from "./routes/grupoRoutes.js";
 import almacenRoutes from "./routes/almacenRoutes.js";
@@ -18,6 +19,11 @@ dotenv.config();
 
 const app = express();
 app.use(express.json());
+
+// --------------------------
+//       CORS - Permitir todos los orígenes
+// --------------------------
+app.use(cors()); // <--- esto permite cualquier origen
 
 // --------------------------
 //       RUTAS API
