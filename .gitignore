@@ -27,11 +27,7 @@ build/
 # -------------------------
 # Docker
 # -------------------------
-# Avoid local bind data
-db_data/
-*.pid
-*.seed
-docker-compose.override.yml
+
 
 # -------------------------
 # System files

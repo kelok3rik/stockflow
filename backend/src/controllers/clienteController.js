@@ -3,7 +3,9 @@ import pool from '../database/db.js';
 // Obtener todos los clientes
 export const getClientes = async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM cliente ORDER BY id_clientes DESC');
+    const result = await pool.query(
+      'SELECT * FROM cliente ORDER BY id_clientes DESC'
+    );
     res.json(result.rows);
   } catch (error) {
     console.error('Error obteniendo clientes:', error);
@@ -35,21 +37,20 @@ export const getClienteById = async (req, res) => {
 export const createCliente = async (req, res) => {
   const {
     nombre,
-    rnc,
+    doc_identidad,
     telefono,
     direccion,
-    correo,
-    limite_credito,
+    email,
     activo
   } = req.body;
 
   try {
     const result = await pool.query(
       `INSERT INTO cliente (
-        nombre, rnc, telefono, direccion, correo, limite_credito, activo
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7)
+        nombre, doc_identidad, telefono, direccion, email, activo
+      ) VALUES ($1,$2,$3,$4,$5,$6)
       RETURNING *`,
-      [nombre, rnc, telefono, direccion, correo, limite_credito, activo ?? true]
+      [nombre, doc_identidad, telefono, direccion, email, activo ?? true]
     );
 
     res.status(201).json(result.rows[0]);
@@ -64,11 +65,10 @@ export const updateCliente = async (req, res) => {
   const { id } = req.params;
   const {
     nombre,
-    rnc,
+    doc_identidad,
     telefono,
     direccion,
-    correo,
-    limite_credito,
+    email,
     activo
   } = req.body;
 
@@ -76,15 +76,14 @@ export const updateCliente = async (req, res) => {
     const result = await pool.query(
       `UPDATE cliente SET
         nombre = $1,
-        rnc = $2,
+        doc_identidad = $2,
         telefono = $3,
         direccion = $4,
-        correo = $5,
-        limite_credito = $6,
-        activo = $7
-      WHERE id_clientes = $8
+        email = $5,
+        activo = $6
+      WHERE id_clientes = $7
       RETURNING *`,
-      [nombre, rnc, telefono, direccion, correo, limite_credito, activo, id]
+      [nombre, doc_identidad, telefono, direccion, email, activo, id]
     );
 
     if (result.rows.length === 0) {

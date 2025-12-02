@@ -8,7 +8,12 @@ import Productos from '../pages/Productos/ProductosPage';
 import AlmacenesPage from '../pages/Almacenes/AlmacenesPage';
 import UbicacionesPage from '../pages/Ubicaciones/UbicacionesPage'
 import DepartamentosPage from '../pages/Departamentos/DepartamentosPage';
+import GruposPage from '../pages/Grupos/GruposPage';
+import TiposMovimientoPage from '../pages/TiposMovimientos/TiposMovimientosPage';
+import ClientesPage from '../pages/Clientes/ClientesPage';
+import ProveedoresPage from '../pages/Proveedores/ProveedoresPage';
 import NoAutorizado from '../pages/NoAutorizado';
+
 
 // Layout
 import DashboardLayout from '../layouts/DashboardLayout';
@@ -85,6 +90,50 @@ export default function AppRoutes() {
             <PermisoRoute permiso="inv_departamentos">
               <DashboardLayout>
                 <DepartamentosPage />
+              </DashboardLayout>
+            </PermisoRoute>
+          }
+        />
+
+        <Route
+          path="/inventario/grupos"
+          element={
+            <PermisoRoute permiso="inv_grupos">
+              <DashboardLayout>
+                <GruposPage />
+              </DashboardLayout>
+            </PermisoRoute>
+          }
+        />
+
+        <Route
+          path="/inventario/tipos-movimientos"
+          element={
+            <PermisoRoute permiso="inv_movimientos">
+              <DashboardLayout>
+                <TiposMovimientoPage />
+              </DashboardLayout>
+            </PermisoRoute>
+          }
+        />
+
+        <Route
+          path="/cxc/clientes"
+          element={
+            <PermisoRoute permiso="cxc_clientes">
+              <DashboardLayout>
+                <ClientesPage />
+              </DashboardLayout>
+            </PermisoRoute>
+          }
+        />
+
+        <Route
+          path="/cxp/proveedores"
+          element={
+            <PermisoRoute permiso="cxp_proveedores">
+              <DashboardLayout>
+                <ProveedoresPage />
               </DashboardLayout>
             </PermisoRoute>
           }

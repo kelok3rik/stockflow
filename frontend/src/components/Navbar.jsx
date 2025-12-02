@@ -91,7 +91,7 @@ export default function Navbar() {
 <ListItemButton onClick={()=>nav("/inventario/ubicaciones")}><ListItemText primary="Ubicaciones"/></ListItemButton>
 <ListItemButton onClick={()=>nav("/inventario/departamentos")}><ListItemText primary="Departamentos"/></ListItemButton>
 <ListItemButton onClick={()=>nav("/inventario/grupos")}><ListItemText primary="Grupos"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/inventario/tipos-movimiento")}><ListItemText primary="Tipos de movimiento"/></ListItemButton>
+<ListItemButton onClick={()=>nav("/inventario/tipos-movimientos")}><ListItemText primary="Tipos de movimiento"/></ListItemButton>
 </List></Collapse>
 
 {/* PROCESOS */}
