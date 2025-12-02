@@ -26,14 +26,14 @@ export const getUsuarioById = async (req, res) => {
   }
 };
 
-// Crear un nuevo usuario
+// Crear usuario
 export const createUsuario = async (req, res) => {
-  const { nombre, usuario, clave, id_rol } = req.body;
+  const { nombre, usuario, clave, id_rol, activo } = req.body; // <- activo
   try {
     const result = await pool.query(
-      `INSERT INTO usuario (nombre, usuario, clave, id_rol)
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-      [nombre, usuario, clave, id_rol]
+      `INSERT INTO usuario (nombre, usuario, clave, id_rol, activo)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+      [nombre, usuario, clave, id_rol, activo]
     );
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -42,24 +42,39 @@ export const createUsuario = async (req, res) => {
   }
 };
 
-// Actualizar un usuario
+// Actualizar usuario
+// Actualizar un usuario con permisos completos
 export const updateUsuario = async (req, res) => {
   const { id } = req.params;
-  const { nombre, usuario, clave, id_rol } = req.body;
+  const permisos = req.body; // <- ahora tomamos todo lo que venga
+
+  if (!permisos || Object.keys(permisos).length === 0) {
+    return res.status(400).json({ error: "No se enviaron datos para actualizar" });
+  }
+
   try {
-    const result = await pool.query(
-      `UPDATE usuario
-       SET nombre=$1, usuario=$2, clave=$3, id_rol=$4
-       WHERE id_usuarios=$5 RETURNING *`,
-      [nombre, usuario, clave, id_rol, id]
-    );
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Usuario no encontrado' });
+    // Construir dinámicamente la query
+    const fields = Object.keys(permisos);
+    const values = Object.values(permisos);
+
+    const setQuery = fields.map((f, i) => `${f}=$${i + 1}`).join(", ");
+
+    const query = `UPDATE usuario SET ${setQuery} WHERE id_usuarios=$${fields.length + 1} RETURNING *`;
+
+    const result = await pool.query(query, [...values, id]);
+
+    if (result.rows.length === 0)
+      return res.status(404).json({ error: "Usuario no encontrado" });
+
     res.json(result.rows[0]);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Error al actualizar el usuario' });
+    res.status(500).json({ error: "Error al actualizar el usuario" });
   }
 };
+
+
+
 
 // Eliminar un usuario
 export const deleteUsuario = async (req, res) => {

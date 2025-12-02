@@ -1,15 +1,13 @@
-// src/pages/productos/useProductos.js
+// src/pages/usuarios/useUsuarios.js
 import { useState, useEffect } from "react";
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export default function useProductos() {
+export default function useUsuarios() {
 
-  const [productos, setProductos] = useState([]);
-  const [departamentos, setDepartamentos] = useState([]);
-  const [grupos, setGrupos] = useState([]);
-  const [ubicaciones, setUbicaciones] = useState([]);
+  const [usuarios, setUsuarios] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // ========== FETCH GENERAL ==========
@@ -18,77 +16,55 @@ export default function useProductos() {
   }, []);
 
   const fetchAll = () => {
-    fetchProductos();
-    fetchDepartamentos();
-    fetchGrupos();
-    fetchUbicaciones();
+    fetchUsuarios();
+    fetchRoles();
   };
 
-  // ========== PRODUCTOS ==========
-  const fetchProductos = async () => {
+  // ========== USUARIOS ==========
+  const fetchUsuarios = async () => {
     try {
       setLoading(true);
-      const { data } = await axios.get(`${API_URL}/api/productos`);
-      setProductos(data);
+      const { data } = await axios.get(`${API_URL}/api/usuarios`);
+      setUsuarios(data);
     } catch (error) {
-      console.error("Error productos:", error);
+      console.error("Error usuarios:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // ========== SELECTS ==========
-  const fetchDepartamentos = async () => {
+  // ========== ROLES ==========
+  const fetchRoles = async () => {
     try {
-      const { data } = await axios.get(`${API_URL}/api/departamentos`);
-      setDepartamentos(data);
+      const { data } = await axios.get(`${API_URL}/api/roles`);
+      setRoles(data);
     } catch (error) {
-      console.error("Error departamentos:", error);
-    }
-  };
-
-  const fetchGrupos = async () => {
-    try {
-      const { data } = await axios.get(`${API_URL}/api/grupos`);
-      setGrupos(data);
-    } catch (error) {
-      console.error("Error grupos:", error);
-    }
-  };
-
-  const fetchUbicaciones = async () => {
-    try {
-      const { data } = await axios.get(`${API_URL}/api/ubicaciones`);
-      setUbicaciones(data);
-    } catch (error) {
-      console.error("Error ubicaciones:", error);
+      console.error("Error roles:", error);
     }
   };
 
   // ========== CRUD ==========
-  const createProducto = async (producto) => {
-    await axios.post(`${API_URL}/api/productos`, producto);
-    fetchProductos();
+  const createUsuario = async (usuario) => {
+    await axios.post(`${API_URL}/api/usuarios`, usuario);
+    fetchUsuarios();
   };
 
-  const updateProducto = async (id, producto) => {
-    await axios.put(`${API_URL}/api/productos/${id}`, producto);
-    fetchProductos();
+  const updateUsuario = async (id, usuario) => {
+    await axios.put(`${API_URL}/api/usuarios/${id}`, usuario);
+    fetchUsuarios();
   };
 
-  const deleteProducto = async (id) => {
-    await axios.delete(`${API_URL}/api/productos/${id}`);
-    fetchProductos();
+  const deleteUsuario = async (id) => {
+    await axios.delete(`${API_URL}/api/usuarios/${id}`);
+    fetchUsuarios();
   };
 
   return {
-    productos,
-    departamentos,
-    grupos,
-    ubicaciones,
+    usuarios,
+    roles,
     loading,
-    createProducto,
-    updateProducto,
-    deleteProducto,
+    createUsuario,
+    updateUsuario,
+    deleteUsuario,
   };
 }

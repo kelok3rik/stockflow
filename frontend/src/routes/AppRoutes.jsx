@@ -12,6 +12,8 @@ import GruposPage from '../pages/Grupos/GruposPage';
 import TiposMovimientoPage from '../pages/TiposMovimientos/TiposMovimientosPage';
 import ClientesPage from '../pages/Clientes/ClientesPage';
 import ProveedoresPage from '../pages/Proveedores/ProveedoresPage';
+import Usuarios from '../pages/Usuarios/UsuariosPage';
+import UsuariosVentanasPage from '../pages/Usuarios/usuariosVentanasPage.jsx';
 import NoAutorizado from '../pages/NoAutorizado';
 
 
@@ -29,40 +31,40 @@ export default function AppRoutes() {
       <Routes>
 
         {/* LOGIN */}
-        <Route 
-          path="/login" 
-          element={user ? <Navigate to="/" /> : <Login />} 
+        <Route
+          path="/login"
+          element={user ? <Navigate to="/" /> : <Login />}
         />
 
         {/* NO AUTORIZADO */}
-        <Route 
-          path="/no-autorizado" 
-          element={<NoAutorizado />} 
+        <Route
+          path="/no-autorizado"
+          element={<NoAutorizado />}
         />
 
         {/* DASHBOARD PRINCIPAL */}
-        <Route 
-          path="/" 
+        <Route
+          path="/"
           element={
-            user 
-              ? <DashboardLayout><Dashboard /></DashboardLayout> 
+            user
+              ? <DashboardLayout><Dashboard /></DashboardLayout>
               : <Navigate to="/login" />
-          } 
+          }
         />
 
         {/* PRODUCTOS - INVENTARIO */}
-        <Route 
-          path="/inventario/productos" 
+        <Route
+          path="/inventario/productos"
           element={
             <PermisoRoute permiso="inv_productos">
               <DashboardLayout>
                 <Productos />
               </DashboardLayout>
             </PermisoRoute>
-          } 
+          }
         />
 
-        <Route 
+        <Route
           path="/inventario/almacenes"
           element={
             <PermisoRoute permiso="inv_almacenes">
@@ -139,8 +141,32 @@ export default function AppRoutes() {
           }
         />
 
+        <Route
+          path="/config/usuarios"
+          element={
+            <PermisoRoute permiso="conf_usuario">
+              <DashboardLayout>
+                <Usuarios />
+              </DashboardLayout>
+            </PermisoRoute>
+          }
+        />
 
-        
+        <Route
+          path="/config/usuario-ventana"
+          element={
+            <PermisoRoute permiso="conf_usuario">
+              <DashboardLayout>
+                <UsuariosVentanasPage />
+              </DashboardLayout>
+            </PermisoRoute>
+          }
+        />
+
+
+
+
+
 
 
 
