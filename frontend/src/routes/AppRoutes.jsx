@@ -14,6 +14,11 @@ import ClientesPage from '../pages/Clientes/ClientesPage';
 import ProveedoresPage from '../pages/Proveedores/ProveedoresPage';
 import Usuarios from '../pages/Usuarios/UsuariosPage';
 import UsuariosVentanasPage from '../pages/Usuarios/usuariosVentanasPage.jsx';
+import EmpresasPage from '../pages/Empresas/EmpresasPage.jsx';
+import RolesPage from '../pages/Roles/RolesPage.jsx';
+import MonedasPage from '../pages/Monedas/MonedasPage.jsx';
+import CondicionesPagoPage from '../pages/CondicionesPagos/CondicionesPagoPage.jsx';
+
 import NoAutorizado from '../pages/NoAutorizado';
 
 
@@ -158,6 +163,50 @@ export default function AppRoutes() {
             <PermisoRoute permiso="conf_usuario">
               <DashboardLayout>
                 <UsuariosVentanasPage />
+              </DashboardLayout>
+            </PermisoRoute>
+          }
+        />
+
+        <Route
+          path="/config/empresa"
+          element={
+            <PermisoRoute permiso="conf_empresa">
+              <DashboardLayout>
+                <EmpresasPage />
+              </DashboardLayout>
+            </PermisoRoute>
+          }
+        />
+
+        <Route
+          path="/config/roles"
+          element={
+            <PermisoRoute permiso="conf_roles">
+              <DashboardLayout>
+                <RolesPage />
+              </DashboardLayout>
+            </PermisoRoute>
+          }
+        />
+
+        <Route
+          path="/config/moneda"
+          element={
+            <PermisoRoute permiso="conf_moneda">
+              <DashboardLayout>
+                <MonedasPage />
+              </DashboardLayout>
+            </PermisoRoute>
+          }
+        />
+
+        <Route
+          path="/config/condicion"
+          element={
+            <PermisoRoute permiso="conf_condicion">
+              <DashboardLayout>
+                <CondicionesPagoPage />
               </DashboardLayout>
             </PermisoRoute>
           }

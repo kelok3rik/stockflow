@@ -14,6 +14,9 @@ import tipoMovimientoRoutes from "./routes/tipoMovimientoRoutes.js";
 import productoRoutes from "./routes/productoRoutes.js";
 import clienteRoutes from "./routes/clienteRoutes.js";
 import proveedorRoutes from "./routes/proveedorRoutes.js";
+import empresaRoutes from "./routes/empresaRoutes.js";
+import monedaRoutes from "./routes/monedaRoutes.js";
+import condicionPagoRoutes from "./routes/condicionPagoRoutes.js";
 
 dotenv.config();
 
@@ -38,6 +41,9 @@ app.use("/api/tipos-movimiento", tipoMovimientoRoutes);
 app.use("/api/productos", productoRoutes);
 app.use("/api/clientes", clienteRoutes);
 app.use("/api/proveedores", proveedorRoutes);
+app.use("/api/empresas", empresaRoutes);
+app.use("/api/monedas", monedaRoutes);
+app.use("/api/condiciones-pago", condicionPagoRoutes);
 
 // --------------------------
 //          SERVER
