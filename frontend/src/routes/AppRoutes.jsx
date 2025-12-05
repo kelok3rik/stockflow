@@ -19,6 +19,11 @@ import RolesPage from '../pages/Roles/RolesPage.jsx';
 import MonedasPage from '../pages/Monedas/MonedasPage.jsx';
 import CondicionesPagoPage from '../pages/CondicionesPagos/CondicionesPagoPage.jsx';
 
+
+
+import POSScreen from '../pages/Factura/POSscreen.jsx';
+import CotizacionPage from '../pages/Cotizaciones/CotizacionPage.jsx';
+
 import NoAutorizado from '../pages/NoAutorizado';
 
 
@@ -212,6 +217,27 @@ export default function AppRoutes() {
           }
         />
 
+        <Route
+          path="/procesos/cotizacion"
+          element={
+            <PermisoRoute permiso="inv_cotizaciones">
+              <DashboardLayout>
+                <CotizacionPage />
+              </DashboardLayout>
+            </PermisoRoute>
+          }
+        />
+
+        <Route
+          path="/procesos/facturacion"
+          element={
+            <PermisoRoute permiso="inv_facturacion">
+              <DashboardLayout>
+                <POSScreen  />
+              </DashboardLayout>
+            </PermisoRoute>
+          }
+        />
 
 
 

@@ -17,6 +17,8 @@ import proveedorRoutes from "./routes/proveedorRoutes.js";
 import empresaRoutes from "./routes/empresaRoutes.js";
 import monedaRoutes from "./routes/monedaRoutes.js";
 import condicionPagoRoutes from "./routes/condicionPagoRoutes.js";
+import cotizacionRoutes from "./routes/cotizacionRoutes.js";
+import facturaRoutes from "./routes/facturaRoutes.js";
 
 dotenv.config();
 
@@ -44,6 +46,8 @@ app.use("/api/proveedores", proveedorRoutes);
 app.use("/api/empresas", empresaRoutes);
 app.use("/api/monedas", monedaRoutes);
 app.use("/api/condiciones-pago", condicionPagoRoutes);
+app.use("/api/facturas", facturaRoutes);
+app.use("/api/cotizaciones", cotizacionRoutes);
 
 // --------------------------
 //          SERVER
