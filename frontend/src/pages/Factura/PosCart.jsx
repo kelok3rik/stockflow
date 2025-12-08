@@ -75,9 +75,8 @@ export default function PosCart({
 
   const clienteNombre = clienteObj?.nombre || "No seleccionado";
   const condicionNombre = condicionObj?.nombre || "No seleccionada";
-  const diasPlazo = condicionObj?.dias_plazo ?? 0;
 
-  // Es contado si dias_plazo == 0 OR si el nombre incluye 'contado' (por compatibilidad)
+  // Es contado si días_plazo == 0 o si el nombre contiene "contado"
   const esContado = useMemo(() => {
     if (!condicionObj) return false;
     const byDias = Number(condicionObj.dias_plazo) === 0;
@@ -129,7 +128,6 @@ export default function PosCart({
   const getItemSubtotal = (item) => (Number(item.precio_unitario) || 0) * (Number(item.cantidad) || 0);
 
   const handleProcesar = () => {
-    // Validaciones extra antes de enviar al padre
     if (!clienteSeleccionado) return;
     if (!condicionPagoSeleccionada) return;
     if (esContado) {
@@ -137,7 +135,6 @@ export default function PosCart({
       if (recibido < Number(total || 0)) return;
     }
 
-    // Llamada al padre con monto y cambio
     onProcesarFactura &&
       onProcesarFactura(
         clienteSeleccionado,
@@ -147,7 +144,6 @@ export default function PosCart({
       );
   };
 
-  // Evita crash si arrays vienen undefined
   const items = Array.isArray(carrito) ? carrito : [];
 
   return (
@@ -175,7 +171,7 @@ export default function PosCart({
         </Badge>
       </Box>
 
-      {/* Selectores de cliente y condición de pago */}
+      {/* Selectores */}
       <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider", bgcolor: "background.default", flexShrink: 0 }}>
         <Stack spacing={2}>
           <FormControl fullWidth size="small">
@@ -186,13 +182,7 @@ export default function PosCart({
             </InputLabel>
             <Select
               value={clienteSelectValue}
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <PersonIcon fontSize="small" /> Cliente
-                </Box>
-              }
               onChange={handleClienteChange}
-              displayEmpty
               size="small"
             >
               <MenuItem value="">
@@ -214,13 +204,7 @@ export default function PosCart({
             </InputLabel>
             <Select
               value={condicionSelectValue}
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <PaymentIcon fontSize="small" /> Condición de Pago
-                </Box>
-              }
               onChange={handleCondicionPagoChange}
-              displayEmpty
               size="small"
             >
               <MenuItem value="">
@@ -235,7 +219,6 @@ export default function PosCart({
             </Select>
           </FormControl>
 
-          {/* Si es contado mostramos monto recibido */}
           {esContado && (
             <>
               <TextField
@@ -245,7 +228,6 @@ export default function PosCart({
                 value={montoRecibido}
                 onChange={(e) => setMontoRecibido(e.target.value)}
                 fullWidth
-                sx={{ mt: 0 }}
                 error={Number(montoRecibido || 0) < Number(total || 0)}
                 helperText={Number(montoRecibido || 0) < Number(total || 0) ? "El monto recibido debe ser mayor o igual al total" : ""}
               />
@@ -265,55 +247,43 @@ export default function PosCart({
       <Box sx={{ flex: 1, overflowY: "auto", p: 2 }}>
         <Stack spacing={2}>
           {items.length === 0 ? (
-            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", p: 4 }}>
+            <Box sx={{ textAlign: "center", py: 4 }}>
               <CartIcon sx={{ fontSize: 48, color: "text.secondary" }} />
               <Typography variant="h6" color="text.secondary" sx={{ mt: 1 }}>Carrito vacío</Typography>
-              <Typography variant="body2" color="text.secondary">Agrega productos desde el catálogo</Typography>
             </Box>
           ) : (
             items.map((item) => (
               <Paper key={item.id_productos} elevation={0} sx={{ p: 2, borderRadius: 2, border: `1px solid ${theme.palette.divider}`, '&:hover': { borderColor: 'primary.light', bgcolor: 'action.hover' } }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="subtitle1" fontWeight="medium" sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.nombre}</Typography>
+                <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="subtitle1" fontWeight="medium">{item.nombre}</Typography>
 
                     <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                      <Chip label={`RD$ ${Number(item.precio_unitario || 0).toFixed(2)}`} size="small" color="primary" variant="outlined" />
-                      <Chip label={`Subtotal: RD$ ${getItemSubtotal(item).toFixed(2)}`} size="small" color="success" sx={{ fontWeight: 'bold' }} />
+                      <Chip label={`RD$ ${Number(item.precio_unitario).toFixed(2)}`} size="small" color="primary" variant="outlined" />
+                      <Chip label={`Subtotal: RD$ ${getItemSubtotal(item).toFixed(2)}`} size="small" color="success" />
                     </Stack>
                   </Box>
 
                   <Stack direction="row" alignItems="center" spacing={1}>
-                    <Tooltip title="Disminuir cantidad"><span>
-                      <IconButton size="small" onClick={() => handleDecrement(item)} disabled={item.cantidad <= 1} sx={{ bgcolor: 'action.hover', '&:hover': { bgcolor: 'action.selected' } }}>
-                        <RemoveIcon fontSize="small" />
-                      </IconButton>
-                    </span></Tooltip>
+                    <IconButton size="small" onClick={() => handleDecrement(item)} disabled={item.cantidad <= 1}>
+                      <RemoveIcon fontSize="small" />
+                    </IconButton>
 
                     <TextField
                       type="number"
                       value={item.cantidad}
                       onChange={(e) => handleQuantityChange(item.id_productos, parseInt(e.target.value) || 1)}
-                      onBlur={(e) => {
-                        const val = parseInt(e.target.value);
-                        if (!val || val < 1) handleQuantityChange(item.id_productos, 1);
-                      }}
-                      inputProps={{ min: 1, max: 999, style: { textAlign: 'center', padding: '6px 8px' } }}
-                      sx={{ width: 70, '& .MuiInputBase-root': { height: 40 } }}
                       size="small"
+                      sx={{ width: 70 }}
                     />
 
-                    <Tooltip title="Aumentar cantidad">
-                      <IconButton size="small" onClick={() => handleIncrement(item)} sx={{ bgcolor: 'action.hover', '&:hover': { bgcolor: 'action.selected' } }}>
-                        <AddIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
+                    <IconButton size="small" onClick={() => handleIncrement(item)}>
+                      <AddIcon fontSize="small" />
+                    </IconButton>
 
-                    <Tooltip title="Eliminar producto">
-                      <IconButton color="error" onClick={() => removeFromCart && removeFromCart(item.id_productos)} sx={{ ml: 1 }}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </Tooltip>
+                    <IconButton color="error" onClick={() => removeFromCart(item.id_productos)} sx={{ ml: 1 }}>
+                      <DeleteIcon />
+                    </IconButton>
                   </Stack>
                 </Box>
               </Paper>
@@ -322,47 +292,41 @@ export default function PosCart({
         </Stack>
       </Box>
 
-      {/* Total y acciones */}
-      <Box sx={{ p: 2, borderTop: 1, borderColor: "divider", bgcolor: "background.default", flexShrink: 0 }}>
+      {/* Total */}
+      <Box sx={{ p: 2, borderTop: 1, borderColor: "divider" }}>
         <Stack spacing={1}>
           <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-            <Typography variant="body2" color="text.secondary">Productos:</Typography>
-            <Typography variant="body2">{items.length}</Typography>
+            <Typography>Productos:</Typography>
+            <Typography>{items.length}</Typography>
           </Box>
 
           <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-            <Typography variant="body2" color="text.secondary">Total unidades:</Typography>
-            <Typography variant="body2">{items.reduce((sum, it) => sum + Number(it.cantidad || 0), 0)}</Typography>
+            <Typography>Total unidades:</Typography>
+            <Typography>{items.reduce((sum, it) => sum + Number(it.cantidad), 0)}</Typography>
           </Box>
 
           <Divider />
 
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", pt: 1 }}>
-            <Typography variant="h6" fontWeight="bold">Total a pagar:</Typography>
-            <Typography variant="h5" fontWeight="bold" color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <ReceiptIcon fontSize="small" /> RD$ {Number(total || 0).toFixed(2)}
+          <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+            <Typography variant="h6">Total:</Typography>
+            <Typography variant="h5" fontWeight="bold">
+              RD$ {Number(total).toFixed(2)}
             </Typography>
           </Box>
         </Stack>
       </Box>
 
-
-
       {/* Botón pagar */}
-      <Box sx={{ p: 2, borderTop: 1, borderColor: "divider", bgcolor: "background.paper", flexShrink: 0 }}>
-        {/* Validaciones */}
+      <Box sx={{ p: 2, borderTop: 1, borderColor: "divider" }}>
         {(!clienteSeleccionado || !condicionPagoSeleccionada) && items.length > 0 && (
-          <Alert severity="warning">
+          <Alert severity="warning" sx={{ mb: 1 }}>
             {!clienteSeleccionado && !condicionPagoSeleccionada
-              ? "Seleccione un cliente y una condición de pago para continuar"
+              ? "Seleccione un cliente y una condición de pago"
               : !clienteSeleccionado
-                ? "Seleccione un cliente para continuar"
-                : "Seleccione una condición de pago para continuar"
-            }
+              ? "Seleccione un cliente"
+              : "Seleccione una condición de pago"}
           </Alert>
         )}
-
-
 
         <Button
           variant="contained"
@@ -370,10 +334,16 @@ export default function PosCart({
           fullWidth
           size="large"
           onClick={handleProcesar}
-          disabled={items.length === 0 || procesando || !clienteSeleccionado || !condicionPagoSeleccionada || (esContado && Number(montoRecibido || 0) < Number(total || 0))}
-          sx={{ py: 1.5, fontWeight: "bold", fontSize: "1rem", borderRadius: 2, textTransform: "none", boxShadow: 3, '&:hover': { boxShadow: 6, transform: 'translateY(-1px)' }, transition: 'all 0.2s', mt: 1 }}
+          disabled={
+            items.length === 0 ||
+            procesando ||
+            !clienteSeleccionado ||
+            !condicionPagoSeleccionada ||
+            (esContado && Number(montoRecibido || 0) < Number(total || 0))
+          }
+          sx={{ py: 1.5, fontWeight: "bold", fontSize: "1rem", borderRadius: 2 }}
         >
-          {procesando ? "Procesando..." : `Pagar RD$ ${Number(total || 0).toFixed(2)}`}
+          {procesando ? "Procesando..." : `Pagar RD$ ${Number(total).toFixed(2)}`}
         </Button>
       </Box>
     </Paper>
