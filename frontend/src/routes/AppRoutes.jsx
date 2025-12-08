@@ -21,7 +21,7 @@ import CondicionesPagoPage from '../pages/CondicionesPagos/CondicionesPagoPage.j
 
 
 
-import POSScreen from '../pages/Factura/POSscreen.jsx';
+import PosPage from '../pages/Factura/PosPage.jsx';
 import CotizacionPage from '../pages/Cotizaciones/CotizacionPage.jsx';
 
 import NoAutorizado from '../pages/NoAutorizado';
@@ -233,7 +233,7 @@ export default function AppRoutes() {
           element={
             <PermisoRoute permiso="inv_facturacion">
               <DashboardLayout>
-                <POSScreen  />
+                <PosPage />
               </DashboardLayout>
             </PermisoRoute>
           }
