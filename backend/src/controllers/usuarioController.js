@@ -2,6 +2,27 @@
 
 import pool from '../database/db.js';
 
+
+export const getUsuariosConTodo = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT 
+          u.*,
+          r.nombre AS rol
+       FROM usuario u
+       LEFT JOIN role r ON u.id_rol = r.id_roles
+       ORDER BY u.id_usuarios`
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error en getUsuariosConTodo:", error);
+    res.status(500).json({ error: 'Error al obtener usuarios completos' });
+  }
+};
+
+
+
 // Obtener todos los usuarios
 export const getUsuarios = async (req, res) => {
   try {

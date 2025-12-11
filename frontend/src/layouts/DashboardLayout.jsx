@@ -1,3 +1,5 @@
+// src/layouts/DashboardLayout
+
 import { Box, Toolbar } from "@mui/material";
 import Navbar from "../components/Navbar";
 

@@ -1,4 +1,4 @@
-// frontend/src/pages/Factura/PosPage.jsx (actualización)
+// frontend/src/pages/Factura/PosPage.jsx
 import {
     Box,
     Button,
@@ -6,10 +6,9 @@ import {
     CircularProgress,
     Alert,
     Snackbar,
-    Paper,
-    Badge
+    Paper
 } from "@mui/material";
-import { ShoppingCart as CartIcon } from "@mui/icons-material";
+
 import { useState } from "react";
 import usePos from "./usePos";
 import PosProducts from "./PosProducts";
@@ -34,11 +33,12 @@ export default function PosPage() {
         mensaje: "",
         tipo: "success"
     });
+
     const [procesando, setProcesando] = useState(false);
     const [clienteSeleccionado, setClienteSeleccionado] = useState("");
     const [condicionPagoSeleccionada, setCondicionPagoSeleccionada] = useState("");
 
-    const handleProcesar = async (clienteId, condicionPagoId) => {
+    const handleProcesar = async (clienteId, condicionPagoId, montoRecibido, cambio) => {
         if (carrito.length === 0) {
             mostrarNotificacion("El carrito está vacío", "warning");
             return;
@@ -56,7 +56,13 @@ export default function PosPage() {
 
         setProcesando(true);
         try {
-            const res = await procesarFactura(clienteId, condicionPagoId);
+            const res = await procesarFactura(
+                clienteId,
+                condicionPagoId,
+                montoRecibido,
+                cambio
+            );
+
             if (res?.error) {
                 mostrarNotificacion(res.error, "error");
             } else {
@@ -70,6 +76,7 @@ export default function PosPage() {
             setProcesando(false);
         }
     };
+
 
     const mostrarNotificacion = (mensaje, tipo = "success") => {
         setNotificacion({ open: true, mensaje, tipo });
@@ -92,91 +99,113 @@ export default function PosPage() {
 
     return (
         <>
-            <Box sx={{
-                height: "100vh",
-                overflow: "hidden",
-                display: "flex",
-                flexDirection: "column",
-                bgcolor: "background.default"
-            }}>
-
-
-                {/* Contenido Principal */}
-                <Box sx={{
-                    flex: 1,
+            <Box
+                sx={{
+                    height: "100vh",
                     overflow: "hidden",
                     display: "flex",
-                    p: 2,
-                    gap: 2
-                }}>
-                    {/* Sección izquierda - Productos */}
-                    <Box sx={{
-                        flex: 7,
+                    flexDirection: "column",
+                    bgcolor: "background.default",
+                    p: 2
+                }}
+            >
+                {/* LAYOUT PRINCIPAL */}
+                <Box
+                    sx={{
+                        flex: 1,
+                        overflow: "hidden",
                         display: "flex",
-                        flexDirection: "column",
-                        height: "100%",
-                        minWidth: 0
-                    }}>
+                        gap: 2,
+
+                        // 🔥 BREAKPOINTS (RESPONSIVE)
+                        flexDirection: {
+                            xs: "column", // móvil
+                            sm: "column", // tablet
+                            md: "row"     // desktop
+                        }
+                    }}
+                >
+
+                    {/* IZQUIERDA: PRODUCTOS */}
+                    <Box
+                        sx={{
+                            flex: {
+                                xs: "1 1 100%",  // móvil
+                                sm: "1 1 100%",  // tablet
+                                md: "0 0 70%"    // desktop
+                            },
+                            maxWidth: {
+                                xs: "100%",
+                                sm: "100%",
+                                md: "70%"
+                            },
+                            minWidth: 0,
+                            display: "flex",
+                            flexDirection: "column",
+                            height: "100%",
+                            overflow: "hidden",
+                            pr: { md: 1 }
+                        }}
+                    >
                         <Paper
-                            elevation={0}
                             sx={{
                                 flex: 1,
                                 display: "flex",
                                 flexDirection: "column",
-                                overflow: "hidden",
                                 borderRadius: 2,
-                                border: 1,
-                                borderColor: "divider",
-                                bgcolor: "background.paper"
+                                overflow: "hidden",
+                                minWidth: 0
                             }}
                         >
-                            {/* Header de productos - FIJO */}
-                            <Box sx={{
-                                p: 2,
-                                borderBottom: 1,
-                                borderColor: "divider",
-                                flexShrink: 0
-                            }}>
+                            {/* Header productos */}
+                            <Box
+                                sx={{
+                                    p: 2,
+                                    borderBottom: "1px solid",
+                                    borderColor: "divider",
+                                    flexShrink: 0
+                                }}
+                            >
                                 <Typography variant="h6" fontWeight="medium">
                                     Productos Disponibles
-                                    <Typography
-                                        component="span"
-                                        sx={{
-                                            ml: 1,
-                                            color: "text.secondary",
-                                            fontSize: "0.875rem"
-                                        }}
-                                    >
-                                        ({productos.length} productos)
-                                    </Typography>
                                 </Typography>
                             </Box>
 
-                            {/* Componente de productos con scroll INTERNO */}
-                            <Box sx={{
-                                flex: 1,
-                                overflow: "hidden",
-                                position: "relative"
-                            }}>
-                                <PosProducts
-                                    productos={productos}
-                                    addToCart={addToCart}
-                                    loading={loading}
-                                />
+                            {/* Lista productos */}
+                            <Box sx={{ flex: 1, overflowY: "auto", minWidth: 0 }}>
+                                <PosProducts productos={productos} addToCart={addToCart} />
                             </Box>
                         </Paper>
                     </Box>
 
-                    {/* Sección derecha - Carrito */}
-                    <Box sx={{
-                        flex: 3,
-                        display: "flex",
-                        flexDirection: "column",
-                        height: "100%",
-                        minWidth: 0,
-                        maxWidth: 420
-                    }}>
 
+                    {/* DERECHA: CARRITO */}
+                    <Box
+                        sx={{
+                            flex: {
+                                xs: "1 1 100%",  // móvil
+                                sm: "1 1 100%",  // tablet
+                                md: "0 0 30%"    // desktop
+                            },
+                            maxWidth: {
+                                xs: "100%",
+                                sm: "100%",
+                                md: "30%"
+                            },
+                            minWidth: 0, // 🔥 FIX PRINCIPAL
+                            display: "flex",
+                            flexDirection: "column",
+                            height: "100%",
+                            overflow: "hidden",
+                            pl: { md: 1 },
+                            borderLeft: {
+                                xs: "none",
+                                md: "1px solid"
+                            },
+                            borderColor: "divider",
+                            boxSizing: "border-box"
+                        }}
+                    >
                         <PosCart
                             carrito={carrito}
                             clientes={clientes}
@@ -191,11 +220,11 @@ export default function PosPage() {
                             procesando={procesando}
                             onProcesarFactura={handleProcesar}
                         />
-
-
                     </Box>
+
                 </Box>
             </Box>
+
 
             {/* Notificaciones */}
             <Snackbar
@@ -210,9 +239,7 @@ export default function PosPage() {
                     variant="filled"
                     sx={{
                         width: "100%",
-                        '& .MuiAlert-icon': {
-                            alignItems: 'center'
-                        }
+                        '& .MuiAlert-icon': { alignItems: 'center' }
                     }}
                 >
                     {notificacion.mensaje}

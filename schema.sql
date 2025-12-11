@@ -170,6 +170,7 @@ CREATE TABLE compra (
     usuario_id BIGINT REFERENCES usuario(id_usuarios),
     fecha DATE DEFAULT CURRENT_DATE,
     total NUMERIC(18,2),
+    saldo NUMERIC(18,2) NOT NULL,  -- ← lo que se debe
     activo BOOLEAN DEFAULT TRUE
 );
 

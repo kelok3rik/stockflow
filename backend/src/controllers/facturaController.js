@@ -49,129 +49,123 @@ const generarNumeroDocumento = async () => {
   return result.rows[0].nuevo_numero.toString().padStart(6, '0');
 };
 
-// Crear factura con detalles
 export const createFactura = async (req, res) => {
-  const {
-    cliente_id,
-    usuario_id,
-    condicion_id,    // 1 = contado
-    monto_recibido,  // solo si contado
-    detalles
-  } = req.body;
-
   const client = await pool.connect();
 
   try {
-    await client.query('BEGIN');
+    const {
+      cliente_id,
+      usuario_id,
+      condicion_id,
+      total,
+      monto_recibido,
+      cambio,
+      detalles
+    } = req.body;
 
-    // Generar número secuencial
-    const numero_documento = await generarNumeroDocumento();
+    console.log("Datos recibidos para crear factura:", req.body);
 
-    // Insertar cabecera temporal (total 0)
-    const facturaResult = await client.query(
-      `INSERT INTO factura (numero_documento, cliente_id, usuario_id, condicion_id, total, saldo, estado)
-       VALUES ($1, $2, $3, $4, 0, 0, 'PENDIENTE')
-       RETURNING id_facturas`,
-      [numero_documento, cliente_id, usuario_id, condicion_id]
+    await client.query("BEGIN");
+
+    // 1. Obtener condición de pago
+    const condResult = await client.query(
+      `SELECT dias_plazo 
+       FROM condicion_pago 
+       WHERE id_condiciones_pago = $1`,
+      [condicion_id]
     );
 
-    const facturaId = facturaResult.rows[0].id_facturas;
+    if (condResult.rows.length === 0) {
+      throw new Error("La condición de pago no existe.");
+    }
 
-    let totalFactura = 0;
+    const dias_plazo = Number(condResult.rows[0].dias_plazo);
+    const esContado = dias_plazo === 0;
 
-    // Insertar detalles y actualizar stock
+    // 2. Validar monto recibido SOLO si es contado
+    const totalNum = Number(total);
+    const recibido = Number(monto_recibido);
+
+    if (esContado && (isNaN(recibido) || recibido < totalNum)) {
+      await client.query("ROLLBACK");
+      return res.status(400).json({
+        message: "El monto recibido es menor que el total."
+      });
+    }
+
+    // 3. Calcular saldo y estado
+    const saldo = esContado ? 0 : totalNum;
+    const estado = esContado ? "PAGADA" : "PENDIENTE";
+
+    // 4. Obtener número correlativo
+    const numeroResult = await client.query(
+      `SELECT COALESCE(MAX(numero_documento::integer), 0) + 1 AS next_num
+       FROM factura`
+    );
+
+    const numeroDoc = String(numeroResult.rows[0].next_num).padStart(6, "0");
+
+    // 5. Insertar factura
+    const facturaResult = await client.query(
+      `INSERT INTO factura 
+      (numero_documento, cliente_id, usuario_id, fecha, condicion_id, total, saldo, estado, activo)
+      VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7, true)
+      RETURNING id_facturas`,
+      [
+        numeroDoc,
+        cliente_id,
+        usuario_id,
+        condicion_id,
+        totalNum,
+        saldo,
+        estado
+      ]
+    );
+
+    // <--- ESTE ES EL ID REAL
+    const factura_id = facturaResult.rows[0].id_facturas;
+
+    // 6. Insertar detalle (FACTURA_DETALLE corrección completa)
     for (const item of detalles) {
-      const { producto_id, cantidad, precio_unitario } = item;
-      const subtotal = cantidad * precio_unitario;
-      totalFactura += subtotal;
-
       await client.query(
-        `INSERT INTO factura_detalle (factura_id, producto_id, cantidad, precio_unitario)
-         VALUES ($1, $2, $3, $4)`,
-        [facturaId, producto_id, cantidad, precio_unitario]
+        `INSERT INTO factura_detalle 
+        (factura_id, producto_id, cantidad, precio_unitario, activo)
+        VALUES ($1, $2, $3, $4, true)`,
+        [
+          factura_id,
+          item.producto_id,
+          item.cantidad,
+          item.precio_unitario
+        ]
       );
 
-      // Actualizar stock
+      // Descontar inventario
       await client.query(
-        `UPDATE producto SET stock = stock - $1 WHERE id_productos = $2`,
-        [cantidad, producto_id]
+        `UPDATE producto 
+         SET stock = stock - $1 
+         WHERE id_productos = $2`,
+        [item.cantidad, item.producto_id]
       );
     }
 
-    // ==========================
-    //  CONTADO
-    // ==========================
-    if (condicion_id === 1) {
+    await client.query("COMMIT");
 
-      // Validar monto recibido
-      if (!monto_recibido || monto_recibido < totalFactura) {
-        await client.query('ROLLBACK');
-        return res.status(400).json({
-          message: "El monto recibido es menor que el total."
-        });
-      }
-
-      const cambio = monto_recibido - totalFactura;
-
-      // Actualizar factura como pagada
-      await client.query(
-        `UPDATE factura
-         SET total = $1, saldo = 0, estado = 'PAGADA', monto_recibido = $2, cambio = $3
-         WHERE id_facturas = $4`,
-        [totalFactura, monto_recibido, cambio, facturaId]
-      );
-
-      // Registrar pago
-      await client.query(
-        `INSERT INTO pagos_factura (factura_id, monto_pagado, usuario_id)
-         VALUES ($1, $2, $3)`,
-        [facturaId, totalFactura, usuario_id]
-      );
-    }
-
-    // ==========================
-    //  CRÉDITO
-    // ==========================
-    else {
-      // Actualizar factura como pendiente
-      await client.query(
-        `UPDATE factura
-         SET total = $1, saldo = $1, estado = 'PENDIENTE'
-         WHERE id_facturas = $2`,
-        [totalFactura, facturaId]
-      );
-
-      // Crear cuenta por cobrar
-      const cxcResult = await client.query(
-        `INSERT INTO cuenta_por_cobrar (cliente_id, factura_id, total, balance)
-         VALUES ($1, $2, $3, $4)
-         RETURNING id_cxc`,
-        [cliente_id, facturaId, totalFactura, totalFactura]
-      );
-
-      const id_cxc = cxcResult.rows[0].id_cxc;
-
-      // Insertar movimiento inicial
-      await client.query(
-        `INSERT INTO detalle_de_cxc (cxc_id, factura_id, descripcion, debito, credito, balance)
-         VALUES ($1, $2, 'Factura a crédito', $3, 0, $3)`,
-        [id_cxc, facturaId, totalFactura]
-      );
-    }
-
-    await client.query('COMMIT');
-
-    res.status(201).json({
-      facturaId,
-      numero_documento,
-      total: totalFactura
+    return res.status(201).json({
+      message: "Factura creada exitosamente.",
+      factura_id,
+      numero_documento: numeroDoc,
+      estado,
+      saldo,
+      cambio: esContado ? Number(cambio) : 0
     });
 
   } catch (error) {
-    await client.query('ROLLBACK');
+    await client.query("ROLLBACK");
     console.error(error);
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   } finally {
     client.release();
   }
 };
+
+
