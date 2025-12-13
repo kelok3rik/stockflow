@@ -27,12 +27,14 @@ import MonedasConsulta from '../pages/Monedas/MonedasConsulta.jsx';
 import CondicionesPagoConsulta from '../pages/CondicionesPagos/CondicionesPagoConsulta.jsx';
 import ProveedoresConsulta from '../pages/Proveedores/ProveedoresConsulta.jsx';
 import ClientesConsulta from '../pages/Clientes/ClientesConsulta.jsx';
+import AjusteInventario from '../pages/AjusteInventario/AjusteInventario.jsx';
 
 
 import PosPage from '../pages/Factura/PosPage.jsx';
 import CotizacionPage from '../pages/Cotizaciones/CotizacionPage.jsx';
 
 import NoAutorizado from '../pages/NoAutorizado';
+
 
 
 // Layout
@@ -341,6 +343,17 @@ export default function AppRoutes() {
             <PermisoRoute permiso="cxc_clientes">
               <DashboardLayout>
                 <ClientesConsulta />
+              </DashboardLayout>
+            </PermisoRoute>
+          }
+        />
+
+        <Route
+          path="/procesos/entradas-salidas"
+          element={
+            <PermisoRoute permiso="inv_movimientos">
+              <DashboardLayout>
+                <AjusteInventario />
               </DashboardLayout>
             </PermisoRoute>
           }

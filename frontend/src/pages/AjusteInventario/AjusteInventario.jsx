@@ -1,34 +1,35 @@
-// frontend/src/pages/Inventario/AjusteInventario.jsx
-import { useState } from "react";
 import {
   Box, Grid, TextField, Button, Typography, MenuItem,
-  Table, TableHead, TableBody, TableCell, TableRow, Paper, Badge
+  Table, TableHead, TableBody, TableCell, TableRow, Paper, IconButton
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 import useAjusteInventario from "./useAjusteInventario";
 
 export default function AjusteInventario() {
-  const { productos, movimientos, loading, registrarMovimiento } = useAjusteInventario();
+  const {
+    productos,
+    detalles,
+    tipoMovimiento,
+    referencia,
+    loading,
 
-  const [productoId, setProductoId] = useState("");
-  const [tipoMovimiento, setTipoMovimiento] = useState("");
-  const [cantidad, setCantidad] = useState("");
-  const [observacion, setObservacion] = useState("");
+    setTipoMovimiento,
+    setReferencia,
 
-  const handleRegistrar = async () => {
-    const result = await registrarMovimiento({
-      producto_id: productoId,
-      tipo: tipoMovimiento,
-      cantidad,
-      observacion
-    });
+    agregarDetalle,
+    modificarDetalle,
+    eliminarDetalle,
+    registrarAjuste
+  } = useAjusteInventario();
 
-    if (result.error) {
-      alert(result.error);
+  const handleGuardar = async () => {
+    const usuario_id = 1; // <-- luego lo sacas del auth
+
+    const res = await registrarAjuste(usuario_id);
+    if (res?.error) {
+      alert(res.error);
     } else {
-      setProductoId("");
-      setTipoMovimiento("");
-      setCantidad("");
-      setObservacion("");
+      alert("Ajuste registrado correctamente");
     }
   };
 
@@ -38,99 +39,101 @@ export default function AjusteInventario() {
         Ajuste de Inventario
       </Typography>
 
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Grid container spacing={2} alignItems="center">
+      {/* ================= ENCABEZADO ================= */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Grid container spacing={2}>
+
           <Grid item xs={12} sm={4}>
             <TextField
               select
-              label="Producto"
-              fullWidth
-              value={productoId}
-              onChange={e => setProductoId(e.target.value)}
-            >
-              <MenuItem value="" disabled>Seleccione un producto</MenuItem>
-              {productos.map(p => (
-                <MenuItem key={p.id_productos} value={p.id_productos}>
-                  {p.nombre} &nbsp;
-                  <Badge color={p.stock <= p.stock_min ? "error" : "primary"} badgeContent={p.stock}>
-                    Stock
-                  </Badge>
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-
-          <Grid item xs={12} sm={3}>
-            <TextField
-              select
-              label="Tipo de movimiento"
+              label="Tipo de Ajuste"
               fullWidth
               value={tipoMovimiento}
               onChange={e => setTipoMovimiento(e.target.value)}
             >
-              <MenuItem value="" disabled>Seleccione tipo</MenuItem>
-              <MenuItem value="entrada">Entrada</MenuItem>
-              <MenuItem value="salida">Salida</MenuItem>
+              <MenuItem value="1">Entrada</MenuItem>
+              <MenuItem value="2">Salida</MenuItem>
             </TextField>
           </Grid>
 
-          <Grid item xs={12} sm={2}>
+          <Grid item xs={12} sm={8}>
             <TextField
-              label="Cantidad"
-              type="number"
+              label="Referencia / Observación"
               fullWidth
-              value={cantidad}
-              onChange={e => setCantidad(e.target.value)}
+              value={referencia}
+              onChange={e => setReferencia(e.target.value)}
             />
-          </Grid>
-
-          <Grid item xs={12} sm={3}>
-            <TextField
-              label="Observación"
-              fullWidth
-              value={observacion}
-              onChange={e => setObservacion(e.target.value)}
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <Button variant="contained" color="primary" onClick={handleRegistrar} disabled={loading}>
-              {loading ? "Guardando..." : "Registrar Movimiento"}
-            </Button>
           </Grid>
         </Grid>
       </Paper>
 
-      <Paper sx={{ p: 2 }}>
-        <Typography variant="h6" gutterBottom>
-          Movimientos recientes
-        </Typography>
+      {/* ================= DETALLES ================= */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Button variant="outlined" onClick={agregarDetalle}>
+          + Agregar Producto
+        </Button>
 
-        <Table size="small">
+        <Table sx={{ mt: 2 }}>
           <TableHead>
             <TableRow>
               <TableCell>Producto</TableCell>
-              <TableCell>Tipo</TableCell>
               <TableCell>Cantidad</TableCell>
-              <TableCell>Observación</TableCell>
-              <TableCell>Fecha</TableCell>
+              <TableCell align="center">Acción</TableCell>
             </TableRow>
           </TableHead>
+
           <TableBody>
-            {movimientos.map((m, i) => (
-              <TableRow key={i}>
-                <TableCell>{m.producto_nombre}</TableCell>
-                <TableCell sx={{ color: m.tipo === "entrada" ? "green" : "red" }}>
-                  {m.tipo}
+            {(detalles || []).map((d, index) => (
+              <TableRow key={index}>
+                <TableCell width="60%">
+                  <TextField
+                    select
+                    fullWidth
+                    value={d.producto_id}
+                    onChange={e =>
+                      modificarDetalle(index, "producto_id", e.target.value)
+                    }
+                  >
+                    <MenuItem value="">Seleccione</MenuItem>
+                    {productos.map(p => (
+                      <MenuItem key={p.id_productos} value={p.id_productos}>
+                        {p.nombre} (Stock: {p.stock})
+                      </MenuItem>
+                    ))}
+                  </TextField>
                 </TableCell>
-                <TableCell>{m.cantidad}</TableCell>
-                <TableCell>{m.observacion}</TableCell>
-                <TableCell>{m.fecha}</TableCell>
+
+                <TableCell width="25%">
+                  <TextField
+                    type="number"
+                    fullWidth
+                    value={d.cantidad}
+                    onChange={e =>
+                      modificarDetalle(index, "cantidad", e.target.value)
+                    }
+                  />
+                </TableCell>
+
+                <TableCell align="center">
+                  <IconButton color="error" onClick={() => eliminarDetalle(index)}>
+                    <DeleteIcon />
+                  </IconButton>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </Paper>
+
+      {/* ================= BOTÓN FINAL ================= */}
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleGuardar}
+        disabled={loading}
+      >
+        {loading ? "Guardando..." : "Guardar Ajuste"}
+      </Button>
     </Box>
   );
 }

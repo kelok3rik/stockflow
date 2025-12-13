@@ -23,17 +23,26 @@ export const createCompra = async (req, res) => {
 
     await client.query("BEGIN");
 
-    // 1. Número correlativo
+    // ============================================================
+    // 1. Obtener correlativo compra
+    // ============================================================
     const numeroResult = await client.query(
       `SELECT COALESCE(MAX(numero_documento::integer), 0) + 1 AS next_num FROM compra`
     );
     const numeroDoc = String(numeroResult.rows[0].next_num).padStart(6, "0");
 
+    // ============================================================
     // 2. Total y saldo
-    const total = calcularTotal(detalles);
+    // ============================================================
+    const total = detalles.reduce(
+      (acc, item) => acc + Number(item.cantidad) * Number(item.costo_unitario),
+      0
+    );
     const saldo = total;
 
+    // ============================================================
     // 3. Insertar compra
+    // ============================================================
     const compraResult = await client.query(
       `INSERT INTO compra
        (numero_documento, proveedor_id, usuario_id, fecha, total, saldo, activo)
@@ -43,37 +52,98 @@ export const createCompra = async (req, res) => {
     );
     const compra_id = compraResult.rows[0].id_compras;
 
-    // 4. Insertar detalles y actualizar inventario
+    // ============================================================
+    // 4. Crear encabezado movimiento inventario (ENTRADA)
+    // ============================================================
+    const movNumResult = await client.query(
+      `SELECT COALESCE(MAX(id_movimientos_inventario), 0) + 1 AS next_num
+       FROM movimiento_inventario`
+    );
+
+    const numeroMovimiento =
+      "MOV-" + String(movNumResult.rows[0].next_num).padStart(6, "0");
+
+    const movimientoResult = await client.query(
+      `INSERT INTO movimiento_inventario 
+      (numero_documento, tipo_movimiento_id, usuario_id, fecha, referencia, activo)
+       VALUES ($1, 1, $2, NOW(), $3, true)
+       RETURNING id_movimientos_inventario`,
+      [
+        numeroMovimiento,
+        usuario_id,
+        `COMPRA ${numeroDoc}`
+      ]
+    );
+
+    const movimiento_id = movimientoResult.rows[0].id_movimientos_inventario;
+
+    // ============================================================
+    // 5. Insertar detalles + movimiento + actualizar inventario
+    // ============================================================
     for (const item of detalles) {
+      const producto_id = item.producto_id;
       const cantidad = Number(item.cantidad);
       const costo_unitario = Number(item.costo_unitario);
 
-      if (!item.producto_id || cantidad <= 0) {
+      if (!producto_id || cantidad <= 0) {
         throw new Error("Detalle inválido: producto_id y cantidad > 0 requeridos.");
       }
 
-      // Insertar detalle
+      // 5.1 Insertar detalle de compra
       await client.query(
         `INSERT INTO compra_detalle
          (compra_id, producto_id, cantidad, costo_unitario, activo)
          VALUES ($1, $2, $3, $4, true)`,
-        [compra_id, item.producto_id, cantidad, costo_unitario]
+        [compra_id, producto_id, cantidad, costo_unitario]
       );
 
-      // Actualizar stock y costo promedio
+      // 5.2 Insertar detalle de movimiento inventario (ENTRADA)
+      await client.query(
+        `INSERT INTO movimiento_inventario_detalle
+         (movimiento_inventario_id, producto_id, cantidad, costo_unitario, activo)
+         VALUES ($1, $2, $3, $4, true)`,
+        [
+          movimiento_id,
+          producto_id,
+          cantidad, // entrada
+          costo_unitario
+        ]
+      );
+
+      // ============================================================
+      // 5.3 Actualizar stock + costo PROMEDIO
+      // ============================================================
+
+      // Traer stock y costo actual antes de actualizar
+      const prodResult = await client.query(
+        `SELECT stock, costo FROM producto WHERE id_productos = $1`,
+        [producto_id]
+      );
+
+      const stockActual = Number(prodResult.rows[0]?.stock ?? 0);
+      const costoActual = Number(prodResult.rows[0]?.costo ?? 0);
+
+      const nuevoStock = stockActual + cantidad;
+
+      const nuevoCosto =
+        stockActual === 0
+          ? costo_unitario
+          : ((stockActual * costoActual) + (cantidad * costo_unitario)) /
+          (stockActual + cantidad);
+
+      // Actualizar producto
       await client.query(
         `UPDATE producto
-         SET stock = COALESCE(stock, 0) + $1,
-             costo = CASE
-               WHEN costo IS NULL THEN $2
-               WHEN COALESCE(stock,0) = 0 THEN $2
-               ELSE ((costo * COALESCE(stock,0)) + ($1 * $2)) / (COALESCE(stock,0) + $1)
-             END
+         SET stock = $1,
+             costo = $2
          WHERE id_productos = $3`,
-        [cantidad, costo_unitario, item.producto_id]
+        [nuevoStock, nuevoCosto, producto_id]
       );
     }
 
+    // ============================================================
+    // 6. Commit
+    // ============================================================
     await client.query("COMMIT");
 
     return res.status(201).json({
@@ -91,6 +161,7 @@ export const createCompra = async (req, res) => {
     client.release();
   }
 };
+
 
 
 export const getCompras = async (req, res) => {

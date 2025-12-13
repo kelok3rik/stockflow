@@ -67,7 +67,9 @@ export const createFactura = async (req, res) => {
 
     await client.query("BEGIN");
 
+    // ============================================================
     // 1. Obtener condición de pago
+    // ============================================================
     const condResult = await client.query(
       `SELECT dias_plazo 
        FROM condicion_pago 
@@ -82,7 +84,6 @@ export const createFactura = async (req, res) => {
     const dias_plazo = Number(condResult.rows[0].dias_plazo);
     const esContado = dias_plazo === 0;
 
-    // 2. Validar monto recibido SOLO si es contado
     const totalNum = Number(total);
     const recibido = Number(monto_recibido);
 
@@ -93,11 +94,12 @@ export const createFactura = async (req, res) => {
       });
     }
 
-    // 3. Calcular saldo y estado
     const saldo = esContado ? 0 : totalNum;
     const estado = esContado ? "PAGADA" : "PENDIENTE";
 
-    // 4. Obtener número correlativo
+    // ============================================================
+    // 2. Obtener correlativo factura
+    // ============================================================
     const numeroResult = await client.query(
       `SELECT COALESCE(MAX(numero_documento::integer), 0) + 1 AS next_num
        FROM factura`
@@ -105,7 +107,9 @@ export const createFactura = async (req, res) => {
 
     const numeroDoc = String(numeroResult.rows[0].next_num).padStart(6, "0");
 
-    // 5. Insertar factura
+    // ============================================================
+    // 3. Insertar factura
+    // ============================================================
     const facturaResult = await client.query(
       `INSERT INTO factura 
       (numero_documento, cliente_id, usuario_id, fecha, condicion_id, total, saldo, estado, activo)
@@ -122,32 +126,95 @@ export const createFactura = async (req, res) => {
       ]
     );
 
-    // <--- ESTE ES EL ID REAL
     const factura_id = facturaResult.rows[0].id_facturas;
 
-    // 6. Insertar detalle (FACTURA_DETALLE corrección completa)
+    // ============================================================
+    // 4. Insertar encabezado movimiento inventario (Opción B)
+    // ============================================================
+    const movNumResult = await client.query(
+      `SELECT COALESCE(MAX(id_movimientos_inventario), 0) + 1 AS next_num
+       FROM movimiento_inventario`
+    );
+
+    const numeroMovimiento =
+      "MOV-" + String(movNumResult.rows[0].next_num).padStart(6, "0");
+
+    const movimientoResult = await client.query(
+      `INSERT INTO movimiento_inventario 
+      (numero_documento, tipo_movimiento_id, usuario_id, fecha, referencia, activo)
+       VALUES ($1, 2, $2, NOW(), $3, true)
+       RETURNING id_movimientos_inventario`,
+      [
+        numeroMovimiento,
+        usuario_id,
+        `FACTURA ${numeroDoc}`
+      ]
+    );
+
+    const movimiento_id = movimientoResult.rows[0].id_movimientos_inventario;
+
+    // ============================================================
+    // 5. Insertar detalles: factura + movimiento + stock
+    // ============================================================
     for (const item of detalles) {
+      const { producto_id, cantidad, precio_unitario } = item;
+
+      // 5.1 Insertar detalle factura
       await client.query(
         `INSERT INTO factura_detalle 
         (factura_id, producto_id, cantidad, precio_unitario, activo)
         VALUES ($1, $2, $3, $4, true)`,
         [
           factura_id,
-          item.producto_id,
-          item.cantidad,
-          item.precio_unitario
+          producto_id,
+          cantidad,
+          precio_unitario
         ]
       );
 
-      // Descontar inventario
+      // ============================================
+      // 5.2 Obtener costo real del producto
+      // ============================================
+      const costoQuery = await client.query(
+        `SELECT costo FROM producto WHERE id_productos = $1`,
+        [producto_id]
+      );
+
+      if (costoQuery.rows.length === 0) {
+        throw new Error(`El producto ${producto_id} no existe`);
+      }
+
+      const costoUnitario = Number(costoQuery.rows[0].costo);
+
+      // ============================================
+      // 5.3 Insertar detalle del movimiento con costo real
+      // ============================================
+      await client.query(
+        `INSERT INTO movimiento_inventario_detalle
+        (movimiento_inventario_id, producto_id, cantidad, costo_unitario, activo)
+        VALUES ($1, $2, $3, $4, true)`,
+        [
+          movimiento_id,
+          producto_id,
+          cantidad * -1, // salida
+          costoUnitario
+        ]
+      );
+
+      // ============================================
+      // 5.4 Actualizar stock
+      // ============================================
       await client.query(
         `UPDATE producto 
          SET stock = stock - $1 
          WHERE id_productos = $2`,
-        [item.cantidad, item.producto_id]
+        [cantidad, producto_id]
       );
     }
 
+    // ============================================================
+    // COMMIT FINAL
+    // ============================================================
     await client.query("COMMIT");
 
     return res.status(201).json({
@@ -167,5 +234,7 @@ export const createFactura = async (req, res) => {
     client.release();
   }
 };
+
+
 
 

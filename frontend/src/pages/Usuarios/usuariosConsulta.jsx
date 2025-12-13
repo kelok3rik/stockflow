@@ -19,27 +19,30 @@ import {
   TablePagination,
   Button,
 } from "@mui/material";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+
+import { generarExcel, generarPDF } from "../../utils/exportHelper";
+import { useAuth } from "../../context/AuthContext";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
 export default function UsuariosConsulta() {
+  const { user } = useAuth();
+  const usuarioActual = user?.nombre || user?.usuario || "Usuario desconocido";
+
   const [usuarios, setUsuarios] = useState([]);
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(false);
+
   const [filtros, setFiltros] = useState({
     nombre: "",
     usuario: "",
     activo: "",
     rol: "",
   });
+
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  // Cargar usuarios
   const loadUsuarios = async () => {
     try {
       setLoading(true);
@@ -52,7 +55,6 @@ export default function UsuariosConsulta() {
     }
   };
 
-  // Cargar roles
   const loadRoles = async () => {
     try {
       const res = await axios.get(`${API_URL}/api/roles`);
@@ -67,16 +69,17 @@ export default function UsuariosConsulta() {
     loadRoles();
   }, []);
 
-  // Filtrado
   const usuariosFiltrados = usuarios.filter((u) => {
     const nombreMatch = u.nombre.toLowerCase().includes(filtros.nombre.toLowerCase());
     const usuarioMatch = u.usuario.toLowerCase().includes(filtros.usuario.toLowerCase());
+
     const activoMatch =
       filtros.activo === ""
         ? true
         : filtros.activo === "true"
-          ? u.activo === true
-          : u.activo === false;
+        ? u.activo === true
+        : u.activo === false;
+
     const rolMatch = filtros.rol === "" ? true : u.rol === filtros.rol;
 
     return nombreMatch && usuarioMatch && activoMatch && rolMatch;
@@ -88,42 +91,32 @@ export default function UsuariosConsulta() {
     setPage(0);
   };
 
-  // EXPORTAR EXCEL
+  const columnas = [
+    { header: "Nombre", field: "nombre" },
+    { header: "Usuario", field: "usuario" },
+    { header: "Clave", field: "clave" },
+    { header: "Rol", field: "rol" },
+    { header: "Activo", field: "activoTexto" },
+  ];
+
+  const datosParaExportar = usuariosFiltrados.map((u) => ({
+    ...u,
+    activoTexto: u.activo ? "Sí" : "No",
+  }));
+
+  const filtrosTexto = `
+Nombre: ${filtros.nombre || "Todos"} | 
+Usuario: ${filtros.usuario || "Todos"} | 
+Activo: ${filtros.activo === "" ? "Todos" : filtros.activo === "true" ? "Activo" : "Inactivo"} | 
+Rol: ${filtros.rol || "Todos"}
+`.replace(/\s+/g, " ");
+
   const exportExcel = () => {
-    const exportData = usuariosFiltrados.map((u) => ({
-      Nombre: u.nombre,
-      Usuario: u.usuario,
-      Clave: u.clave,
-      Rol: u.rol,
-      Activo: u.activo ? "Sí" : "No",
-    }));
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Usuarios");
-    const buffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-    const blob = new Blob([buffer], { type: "application/octet-stream" });
-    saveAs(blob, "usuarios.xlsx");
+    generarExcel("usuarios", datosParaExportar, columnas, usuarioActual, filtrosTexto);
   };
 
-  // EXPORTAR PDF
   const exportPDF = () => {
-    const doc = new jsPDF();
-    const tableColumn = ["Nombre", "Usuario", "Clave", "Rol", "Activo"];
-    const tableRows = usuariosFiltrados.map((u) => [
-      u.nombre,
-      u.usuario,
-      u.clave,
-      u.rol,
-      u.activo ? "Sí" : "No",
-    ]);
-
-    doc.text("Listado de Usuarios", 14, 15);
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 20,
-    });
-    doc.save("usuarios.pdf");
+    generarPDF("REPORTE DE USUARIOS", "usuarios", datosParaExportar, columnas, usuarioActual, filtrosTexto);
   };
 
   return (
@@ -132,39 +125,36 @@ export default function UsuariosConsulta() {
         Consulta de Usuarios
       </Typography>
 
-      {/* Botones Exportar */}
-      <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
+      <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
         <Button variant="contained" color="primary" onClick={exportExcel}>
           Exportar Excel
         </Button>
+
         <Button variant="contained" color="secondary" onClick={exportPDF}>
           Exportar PDF
         </Button>
       </Box>
 
-      {/* Filtros */}
       <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
         <TextField
-          label="Buscar por nombre"
-          variant="outlined"
+          label="Nombre"
           value={filtros.nombre}
           onChange={(e) => setFiltros({ ...filtros, nombre: e.target.value })}
           sx={{ minWidth: 200 }}
         />
 
         <TextField
-          label="Buscar por usuario"
-          variant="outlined"
+          label="Usuario"
           value={filtros.usuario}
           onChange={(e) => setFiltros({ ...filtros, usuario: e.target.value })}
           sx={{ minWidth: 200 }}
         />
 
-        <FormControl variant="outlined" sx={{ minWidth: 150 }}>
+        <FormControl sx={{ minWidth: 150 }}>
           <InputLabel>Activo</InputLabel>
           <Select
-            label="Activo"
             value={filtros.activo}
+            label="Activo"
             onChange={(e) => setFiltros({ ...filtros, activo: e.target.value })}
           >
             <MenuItem value="">Todos</MenuItem>
@@ -173,11 +163,11 @@ export default function UsuariosConsulta() {
           </Select>
         </FormControl>
 
-        <FormControl variant="outlined" sx={{ minWidth: 150 }}>
+        <FormControl sx={{ minWidth: 150 }}>
           <InputLabel>Rol</InputLabel>
           <Select
-            label="Rol"
             value={filtros.rol}
+            label="Rol"
             onChange={(e) => setFiltros({ ...filtros, rol: e.target.value })}
           >
             <MenuItem value="">Todos</MenuItem>
@@ -190,19 +180,16 @@ export default function UsuariosConsulta() {
         </FormControl>
       </Box>
 
-      {/* Estado de carga */}
       {loading && (
         <Box sx={{ display: "flex", justifyContent: "center", my: 3 }}>
           <CircularProgress />
         </Box>
       )}
 
-      {/* Tabla */}
       <TableContainer component={Paper} sx={{ maxHeight: 600 }}>
         <Table stickyHeader>
           <TableHead>
             <TableRow>
-              <TableCell>ID</TableCell>
               <TableCell>Nombre</TableCell>
               <TableCell>Usuario</TableCell>
               <TableCell>Clave</TableCell>
@@ -210,10 +197,11 @@ export default function UsuariosConsulta() {
               <TableCell>Activo</TableCell>
             </TableRow>
           </TableHead>
+
           <TableBody>
-            {usuariosFiltrados.length === 0 && !loading ? (
+            {usuariosFiltrados.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell colSpan={5} align="center">
                   No se encontraron usuarios
                 </TableCell>
               </TableRow>
@@ -222,7 +210,6 @@ export default function UsuariosConsulta() {
                 .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                 .map((u) => (
                   <TableRow key={u.id_usuarios}>
-                    <TableCell>{u.id_usuarios}</TableCell>
                     <TableCell>{u.nombre}</TableCell>
                     <TableCell>{u.usuario}</TableCell>
                     <TableCell>{u.clave}</TableCell>
@@ -235,13 +222,12 @@ export default function UsuariosConsulta() {
         </Table>
       </TableContainer>
 
-      {/* Paginación */}
       <TablePagination
         component="div"
         count={usuariosFiltrados.length}
         page={page}
-        onPageChange={handleChangePage}
         rowsPerPage={rowsPerPage}
+        onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
         rowsPerPageOptions={[5, 10, 25, 50]}
       />
