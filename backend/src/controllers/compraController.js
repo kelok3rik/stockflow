@@ -219,6 +219,92 @@ export const getCompraById = async (req, res) => {
   }
 };
 
+export const getComprasPendientes = async (req, res) => {
+  const { proveedorId } = req.params;
+
+  try {
+    const { rows } = await pool.query(
+      `SELECT c.*,
+       p.nombre AS proveedor_nombre
+FROM compra c
+LEFT JOIN proveedor p ON p.id_proveedores = c.proveedor_id
+WHERE c.saldo > 0 AND c.proveedor_id = $1
+ORDER BY c.fecha DESC;
+`,
+      [proveedorId]
+    );
+
+    return res.json(rows);
+  } catch (err) {
+    console.error('getComprasPendientes error:', err);
+    return res.status(500).json({ message: 'Error al obtener compras pendientes', error: err.message });
+  }
+};
+
+
+export const pagarCompra = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { abono, usuario_id, metodo_pago = "EFECTIVO" } = req.body;
+    const { id } = req.params; // <-- toma el ID de la URL
+
+    await client.query('BEGIN');
+
+    // 1️⃣ Obtener saldo actual de la compra y proveedor
+    const { rows } = await client.query(
+      'SELECT saldo, proveedor_id FROM compra WHERE id_compras = $1 FOR UPDATE',
+      [id]
+    );
+
+    if (!rows.length) throw new Error('Compra no encontrada');
+
+    const saldoActual = parseFloat(rows[0].saldo);
+    const proveedor_id = rows[0].proveedor_id;
+
+    if (abono > saldoActual) throw new Error('El pago excede el saldo pendiente');
+
+    // 2️⃣ Actualizar saldo y estado de la compra
+    const nuevoSaldo = saldoActual - abono;
+    const nuevoEstado = nuevoSaldo === 0 ? 'PAGADA' : 'PENDIENTE';
+
+    await client.query(
+      'UPDATE compra SET saldo = $1, estado = $2 WHERE id_compras = $3',
+      [nuevoSaldo, nuevoEstado, id]
+    );
+
+    // 3️⃣ Generar número de documento seguro para pago
+    const numeroResult = await client.query(
+      `SELECT COALESCE(MAX(CAST(SUBSTRING(numero_documento FROM 5) AS INTEGER)), 0) + 1 AS next_num
+       FROM pago`
+    );
+    const numeroDocumento = "PAG-" + String(numeroResult.rows[0].next_num).padStart(6, '0');
+
+    // 4️⃣ Insertar pago en tabla pago vinculando compra y proveedor
+    await client.query(
+      `INSERT INTO pago (numero_documento, compra_id, proveedor_id, usuario_id, fecha, monto, metodo_pago, activo)
+       VALUES ($1, $2, $3, $4, NOW(), $5, $6, true)`,
+      [numeroDocumento, id, proveedor_id, usuario_id, abono, metodo_pago]
+    );
+
+    await client.query('COMMIT');
+
+    res.json({
+      success: true,
+      nuevoSaldo,
+      nuevoEstado,
+      numeroDocumento
+    });
+
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error(err);
+    res.status(400).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+
 
 export const anularCompra = async (req, res) => {
   const { id } = req.params;

@@ -10,10 +10,10 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      # Datos persistentes
+      
       - ./db_data:/var/lib/postgresql/data
 
-      # Ejecuta schema solo al iniciar limpio
+      
       - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
 
   pgadmin:

@@ -39,7 +39,98 @@ export const getFacturas = async (req, res) => {
   }
 };
 
-// Función para generar número de documento secuencial
+// Obtener facturas pendientes de un cliente
+export const getFacturasPendientes = async (req, res) => {
+  try {
+    const { cliente_id } = req.params;
+
+    const result = await pool.query(
+      `SELECT 
+        id_facturas,
+        numero_documento,
+        fecha,
+        total,
+        saldo,
+        estado
+       FROM factura
+       WHERE cliente_id = $1
+         AND saldo > 0
+       ORDER BY fecha ASC`,
+      [cliente_id]
+    );
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const abonarFactura = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id_factura, abono, usuario_id, metodo_pago = "EFECTIVO" } = req.body;
+
+    await client.query('BEGIN');
+
+    // 1️⃣ Obtener saldo actual de la factura y el cliente
+    const { rows } = await client.query(
+      'SELECT saldo, cliente_id FROM factura WHERE id_facturas = $1 FOR UPDATE',
+      [id_factura]
+    );
+
+    if (!rows.length) throw new Error('Factura no encontrada');
+
+    const saldoActual = parseFloat(rows[0].saldo);
+    const cliente_id = rows[0].cliente_id;
+
+    if (abono > saldoActual) throw new Error('El abono excede el saldo pendiente');
+
+    // 2️⃣ Actualizar saldo y estado de la factura
+    const nuevoSaldo = saldoActual - abono;
+    const nuevoEstado = nuevoSaldo === 0 ? 'PAGADA' : 'PENDIENTE';
+
+    await client.query(
+      'UPDATE factura SET saldo = $1, estado = $2 WHERE id_facturas = $3',
+      [nuevoSaldo, nuevoEstado, id_factura]
+    );
+
+    // 3️⃣ Generar número de documento seguro para cobro
+    const numeroResult = await client.query(
+      `SELECT COALESCE(MAX(CAST(SUBSTRING(numero_documento FROM 5) AS INTEGER)), 0) + 1 AS next_num
+       FROM cobro`
+    );
+    const numeroDocumento = "PAG-" + String(numeroResult.rows[0].next_num).padStart(6, '0');
+
+    // 4️⃣ Insertar abono en tabla cobro vinculando factura y cliente
+    await client.query(
+      `INSERT INTO cobro (numero_documento, factura_id, cliente_id, usuario_id, fecha, monto, metodo_pago, activo)
+       VALUES ($1, $2, $3, $4, NOW(), $5, $6, true)`,
+      [numeroDocumento, id_factura, cliente_id, usuario_id, abono, metodo_pago]
+    );
+
+    await client.query('COMMIT');
+
+    // 5️⃣ Respuesta exitosa
+    res.json({
+      success: true,
+      nuevoSaldo,
+      nuevoEstado,
+      numeroDocumento
+    });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error(err);
+    res.status(400).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+
+
+
+
 const generarNumeroDocumento = async () => {
   const result = await pool.query(`
     SELECT COALESCE(MAX(CAST(numero_documento AS INTEGER)), 0) + 1 AS nuevo_numero

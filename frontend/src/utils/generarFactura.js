@@ -2,39 +2,27 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-/**
- * data: {
- *   tipo: "Factura" | "Compra" | "Ticket",
- *   numero_documento,
- *   fecha,
- *   cliente_nombre,
- *   condicion_pago,
- *   detalles: [{ nombre, cantidad, precio_unitario }],
- *   total,
- *   monto_recibido,
- *   cambio
- * }
- */
 export function generarDocumentoPDF(data) {
   const {
-    tipo = "Documento",
+    tipo = "Documento", // Factura | Compra | Ajuste
     numero_documento,
     fecha,
     cliente_nombre,
     condicion_pago,
     detalles = [],
-    total = 0,
-    monto_recibido = 0,
-    cambio = 0,
+    total,
+    monto_recibido,
+    cambio,
   } = data;
 
-  // Media carta → 5.5 x 8.5 pulgadas
   const doc = new jsPDF({
     unit: "pt",
     format: [396, 612], // media carta
   });
 
-  // ====== ENCABEZADO ======
+  // ======================
+  // ENCABEZADO
+  // ======================
   doc.setFontSize(16);
   doc.text(tipo.toUpperCase(), 30, 40);
 
@@ -47,37 +35,76 @@ export function generarDocumentoPDF(data) {
     doc.text(`Condición: ${condicion_pago || ""}`, 30, 110);
   }
 
-  // ====== TABLA DE PRODUCTOS ======
+  // ======================
+  // TABLA
+  // ======================
+  let startY = tipo === "Ajuste" ? 100 : 130;
+
   if (detalles.length > 0) {
-    autoTable(doc, {
-      startY: 130,
-      head: [["Producto", "Cant", "Precio", "Subtotal"]],
-      body: detalles.map((item) => {
-        const cantidad = Number(item.cantidad) || 0;
-        const precio = Number(item.precio_unitario) || 0;
-        return [
-          item.nombre || "",
-          cantidad,
-          precio.toFixed(2),
-          (cantidad * precio).toFixed(2),
-        ];
-      }),
-      theme: "grid",
-      styles: { fontSize: 9 },
-    });
+
+    // 🟦 AJUSTE DE INVENTARIO
+    if (tipo === "Ajuste") {
+      autoTable(doc, {
+        startY,
+        head: [["Producto", "Cantidad", "Movimiento"]],
+        body: detalles.map(d => [
+          d.nombre,
+          d.cantidad,
+          d.movimiento
+        ]),
+        theme: "grid",
+        styles: { fontSize: 9 },
+      });
+
+    // 🟩 FACTURA / COMPRA
+    } else {
+      autoTable(doc, {
+        startY,
+        head: [["Producto", "Cant", "Precio", "Subtotal"]],
+        body: detalles.map(d => {
+          const cant = Number(d.cantidad) || 0;
+          const precio = Number(d.precio_unitario) || 0;
+          return [
+            d.nombre,
+            cant,
+            precio.toFixed(2),
+            (cant * precio).toFixed(2)
+          ];
+        }),
+        theme: "grid",
+        styles: { fontSize: 9 },
+      });
+    }
   }
 
-  // ====== TOTAL ======
-  let finalY = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 20 : 150;
-  doc.setFontSize(12);
-  doc.text(`TOTAL: RD$ ${(Number(total) || 0).toFixed(2)}`, 30, finalY);
+  // ======================
+  // TOTALES (SOLO FACTURA / COMPRA)
+  // ======================
+  if (tipo !== "Ajuste") {
+    let finalY = doc.lastAutoTable?.finalY
+      ? doc.lastAutoTable.finalY + 20
+      : 150;
 
-  if (monto_recibido != null && cambio != null) {
-    doc.text(`Monto recibido: RD$ ${(Number(monto_recibido) || 0).toFixed(2)}`, 30, finalY + 20);
-    doc.text(`Cambio: RD$ ${(Number(cambio) || 0).toFixed(2)}`, 30, finalY + 40);
+    doc.setFontSize(12);
+    doc.text(`TOTAL: RD$ ${(Number(total) || 0).toFixed(2)}`, 30, finalY);
+
+    if (monto_recibido != null && cambio != null) {
+      doc.text(
+        `Monto recibido: RD$ ${(Number(monto_recibido) || 0).toFixed(2)}`,
+        30,
+        finalY + 20
+      );
+      doc.text(
+        `Cambio: RD$ ${(Number(cambio) || 0).toFixed(2)}`,
+        30,
+        finalY + 40
+      );
+    }
   }
 
-  // ====== DESCARGAR ======
+  // ======================
+  // DESCARGA
+  // ======================
   const nombreArchivo = `${tipo}_${numero_documento || "0000"}.pdf`;
   doc.save(nombreArchivo);
 }

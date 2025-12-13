@@ -23,7 +23,7 @@ export default function AjusteInventario() {
   } = useAjusteInventario();
 
   const handleGuardar = async () => {
-    const usuario_id = 1; // <-- luego lo sacas del auth
+    const usuario_id = 1; // luego reemplazar por usuario real
 
     const res = await registrarAjuste(usuario_id);
     if (res?.error) {
@@ -39,20 +39,18 @@ export default function AjusteInventario() {
         Ajuste de Inventario
       </Typography>
 
-      {/* ================= ENCABEZADO ================= */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Grid container spacing={2}>
-
           <Grid item xs={12} sm={4}>
             <TextField
               select
               label="Tipo de Ajuste"
               fullWidth
               value={tipoMovimiento}
-              onChange={e => setTipoMovimiento(e.target.value)}
+              onChange={e => setTipoMovimiento(Number(e.target.value))}
             >
-              <MenuItem value="1">Entrada</MenuItem>
-              <MenuItem value="2">Salida</MenuItem>
+              <MenuItem value={3}>AJUSTE POSITIVO</MenuItem>
+              <MenuItem value={4}>AJUSTE NEGATIVO</MenuItem>
             </TextField>
           </Grid>
 
@@ -67,7 +65,6 @@ export default function AjusteInventario() {
         </Grid>
       </Paper>
 
-      {/* ================= DETALLES ================= */}
       <Paper sx={{ p: 3, mb: 3 }}>
         <Button variant="outlined" onClick={agregarDetalle}>
           + Agregar Producto
@@ -78,6 +75,7 @@ export default function AjusteInventario() {
             <TableRow>
               <TableCell>Producto</TableCell>
               <TableCell>Cantidad</TableCell>
+              <TableCell>Movimiento</TableCell>
               <TableCell align="center">Acción</TableCell>
             </TableRow>
           </TableHead>
@@ -85,7 +83,7 @@ export default function AjusteInventario() {
           <TableBody>
             {(detalles || []).map((d, index) => (
               <TableRow key={index}>
-                <TableCell width="60%">
+                <TableCell width="50%">
                   <TextField
                     select
                     fullWidth
@@ -103,7 +101,7 @@ export default function AjusteInventario() {
                   </TextField>
                 </TableCell>
 
-                <TableCell width="25%">
+                <TableCell width="20%">
                   <TextField
                     type="number"
                     fullWidth
@@ -112,6 +110,10 @@ export default function AjusteInventario() {
                       modificarDetalle(index, "cantidad", e.target.value)
                     }
                   />
+                </TableCell>
+
+                <TableCell width="20%">
+                  {tipoMovimiento === 3 ? "AJUSTE POSITIVO" : "AJUSTE NEGATIVO"}
                 </TableCell>
 
                 <TableCell align="center">
@@ -125,7 +127,6 @@ export default function AjusteInventario() {
         </Table>
       </Paper>
 
-      {/* ================= BOTÓN FINAL ================= */}
       <Button
         variant="contained"
         color="primary"

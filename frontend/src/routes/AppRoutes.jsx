@@ -28,6 +28,9 @@ import CondicionesPagoConsulta from '../pages/CondicionesPagos/CondicionesPagoCo
 import ProveedoresConsulta from '../pages/Proveedores/ProveedoresConsulta.jsx';
 import ClientesConsulta from '../pages/Clientes/ClientesConsulta.jsx';
 import AjusteInventario from '../pages/AjusteInventario/AjusteInventario.jsx';
+import DevolucionFactura from '../pages/Devoluciones/DevolucionFactura.jsx';
+import AbonosScreen from '../pages/Abonos/AbonosScreen.jsx';
+import PagosScreen from '../pages/Pagos/PagosScreen.jsx';
 
 
 import PosPage from '../pages/Factura/PosPage.jsx';
@@ -359,6 +362,40 @@ export default function AppRoutes() {
           }
         />
 
+        <Route
+          path="/procesos/devoluciones"
+          element={
+            <PermisoRoute permiso="inv_devoluciones">
+              <DashboardLayout>
+                <DevolucionFactura />
+              </DashboardLayout>
+            </PermisoRoute>
+          }
+        />
+
+
+
+        <Route
+          path="/cxc/cobros"
+          element={
+            <PermisoRoute permiso="cxc_cobros">
+              <DashboardLayout>
+                <AbonosScreen />
+              </DashboardLayout>
+            </PermisoRoute>
+          }
+        />
+
+        <Route
+          path="/cxp/pagos"
+          element={
+            <PermisoRoute permiso="cxp_pagos">
+              <DashboardLayout>
+                <PagosScreen />
+              </DashboardLayout>
+            </PermisoRoute>
+          }
+        />
         
 
 

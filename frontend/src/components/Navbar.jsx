@@ -72,174 +72,147 @@ export default function Navbar() {
       <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
         <List sx={{ width: 320 }}>
 
-{/* INVENTARIO */}
-<ListItemButton onClick={() => setOpenInv(!openInv)}>
-  <ListItemIcon><InventoryIcon /></ListItemIcon>
-  <ListItemText primary="Inventario" />
-  {expandIcon(openInv)}
-</ListItemButton>
+          {/* INVENTARIO */}
+          <ListItemButton onClick={() => setOpenInv(!openInv)}>
+            <ListItemIcon><InventoryIcon /></ListItemIcon>
+            <ListItemText primary="Inventario" />
+            {expandIcon(openInv)}
+          </ListItemButton>
 
-<Collapse in={openInv}><List sx={{ pl: 3 }}>
+          <Collapse in={openInv}><List sx={{ pl: 3 }}>
 
-{/* MANTENIMIENTO */}
-<ListItemButton onClick={() => setOpenInvM(!openInvM)}>
-  <ListItemText primary="Mantenimiento" />{expandIcon(openInvM)}
-</ListItemButton>
-<Collapse in={openInvM}><List sx={{ pl: 3 }}>
-<ListItemButton onClick={()=>nav("/inventario/productos")}><ListItemText primary="Productos"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/inventario/almacenes")}><ListItemText primary="Almacenes"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/inventario/ubicaciones")}><ListItemText primary="Ubicaciones"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/inventario/departamentos")}><ListItemText primary="Departamentos"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/inventario/grupos")}><ListItemText primary="Grupos"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/inventario/tipos-movimientos")}><ListItemText primary="Tipos de movimiento"/></ListItemButton>
-</List></Collapse>
+            {/* MANTENIMIENTO */}
+            <ListItemButton onClick={() => setOpenInvM(!openInvM)}>
+              <ListItemText primary="Mantenimiento" />{expandIcon(openInvM)}
+            </ListItemButton>
+            <Collapse in={openInvM}><List sx={{ pl: 3 }}>
+              <ListItemButton onClick={() => nav("/inventario/productos")}><ListItemText primary="Productos" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/inventario/almacenes")}><ListItemText primary="Almacenes" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/inventario/ubicaciones")}><ListItemText primary="Ubicaciones" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/inventario/departamentos")}><ListItemText primary="Departamentos" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/inventario/grupos")}><ListItemText primary="Grupos" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/inventario/tipos-movimientos")}><ListItemText primary="Tipos de movimiento" /></ListItemButton>
+            </List></Collapse>
 
-{/* PROCESOS */}
-<ListItemButton onClick={() => setOpenInvP(!openInvP)}>
-  <ListItemText primary="Procesos" />{expandIcon(openInvP)}
-</ListItemButton>
-<Collapse in={openInvP}><List sx={{ pl: 3 }}>
-<ListItemButton onClick={()=>nav("/procesos/facturacion")}><ListItemText primary="Facturación"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/procesos/cotizacion")}><ListItemText primary="Cotización"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/procesos/compras")}><ListItemText primary="Compras"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/procesos/entradas-salidas")}><ListItemText primary="Entradas / Salidas"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/procesos/devoluciones")}><ListItemText primary="Devoluciones"/></ListItemButton>
-</List></Collapse>
+            {/* PROCESOS */}
+            <ListItemButton onClick={() => setOpenInvP(!openInvP)}>
+              <ListItemText primary="Procesos" />{expandIcon(openInvP)}
+            </ListItemButton>
+            <Collapse in={openInvP}><List sx={{ pl: 3 }}>
+              <ListItemButton onClick={() => nav("/procesos/facturacion")}><ListItemText primary="Facturación" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/procesos/cotizacion")}><ListItemText primary="Cotización" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/procesos/compras")}><ListItemText primary="Compras" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/procesos/entradas-salidas")}><ListItemText primary="Entradas / Salidas" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/procesos/devoluciones")}><ListItemText primary="Devoluciones" /></ListItemButton>
+            </List></Collapse>
 
-{/* CONSULTAS */}
-<ListItemButton onClick={() => setOpenInvC(!openInvC)}>
-  <ListItemText primary="Consultas" />{expandIcon(openInvC)}
-</ListItemButton>
-<Collapse in={openInvC}><List sx={{ pl: 3 }}>
-<ListItemButton onClick={()=>nav("/consultas/cotizaciones")}><ListItemText primary="Cotizaciones"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/consultas/compras")}><ListItemText primary="Compras"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/consultas/entradas-salidas")}><ListItemText primary="Entradas / Salidas"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/consultas/devoluciones")}><ListItemText primary="Devoluciones"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/consultas/facturas")}><ListItemText primary="Facturas"/></ListItemButton>
-</List></Collapse>
+            {/* CONSULTAS */}
+            <ListItemButton onClick={() => setOpenInvC(!openInvC)}>
+              <ListItemText primary="Consultas" />{expandIcon(openInvC)}
+            </ListItemButton>
+            <Collapse in={openInvC}><List sx={{ pl: 3 }}>
+              <ListItemButton onClick={() => nav("/consultas/cotizaciones")}><ListItemText primary="Cotizaciones" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/consultas/compras")}><ListItemText primary="Compras" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/consultas/entradas-salidas")}><ListItemText primary="Entradas / Salidas" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/consultas/devoluciones")}><ListItemText primary="Devoluciones" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/consultas/facturas")}><ListItemText primary="Facturas" /></ListItemButton>
+            </List></Collapse>
 
-{/* REPORTES */}
-<ListItemButton onClick={() => setOpenInvR(!openInvR)}>
-  <ListItemText primary="Reportes" />{expandIcon(openInvR)}
-</ListItemButton>
-<Collapse in={openInvR}><List sx={{ pl: 3 }}>
-<ListItemButton onClick={()=>nav("/reportes/cotizaciones")}><ListItemText primary="Cotizaciones"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/reportes/compras")}><ListItemText primary="Compras"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/reportes/entradas-salidas")}><ListItemText primary="Entradas / Salidas"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/reportes/devoluciones")}><ListItemText primary="Devoluciones"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/reportes/facturas")}><ListItemText primary="Facturas"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/reportes/movimiento-producto")}><ListItemText primary="Movimiento por producto"/></ListItemButton>
-</List></Collapse>
+            
 
-</List></Collapse>
+          </List></Collapse>
 
-{/* CUENTAS POR COBRAR */}
-<ListItemButton onClick={() => setOpenCXC(!openCXC)}>
-<ListItemIcon><AccountBalanceWalletIcon /></ListItemIcon>
-<ListItemText primary="Cuentas por Cobrar" />
-{expandIcon(openCXC)}
-</ListItemButton>
+          {/* CUENTAS POR COBRAR */}
+          <ListItemButton onClick={() => setOpenCXC(!openCXC)}>
+            <ListItemIcon><AccountBalanceWalletIcon /></ListItemIcon>
+            <ListItemText primary="Cuentas por Cobrar" />
+            {expandIcon(openCXC)}
+          </ListItemButton>
 
-<Collapse in={openCXC}><List sx={{ pl: 3 }}>
-<ListItemButton onClick={() => setOpenCXCM(!openCXCM)}><ListItemText primary="Mantenimiento"/>{expandIcon(openCXCM)}</ListItemButton>
-<Collapse in={openCXCM}><List sx={{ pl: 3 }}>
-<ListItemButton onClick={()=>nav("/cxc/clientes")}><ListItemText primary="Clientes"/></ListItemButton>
-</List></Collapse>
+          <Collapse in={openCXC}><List sx={{ pl: 3 }}>
+            <ListItemButton onClick={() => setOpenCXCM(!openCXCM)}><ListItemText primary="Mantenimiento" />{expandIcon(openCXCM)}</ListItemButton>
+            <Collapse in={openCXCM}><List sx={{ pl: 3 }}>
+              <ListItemButton onClick={() => nav("/cxc/clientes")}><ListItemText primary="Clientes" /></ListItemButton>
+            </List></Collapse>
 
-<ListItemButton onClick={() => setOpenCXCP(!openCXCP)}><ListItemText primary="Procesos"/>{expandIcon(openCXCP)}</ListItemButton>
-<Collapse in={openCXCP}><List sx={{ pl: 3 }}>
-<ListItemButton onClick={()=>nav("/cxc/cobros")}><ListItemText primary="Cobro"/></ListItemButton>
-</List></Collapse>
+            <ListItemButton onClick={() => setOpenCXCP(!openCXCP)}><ListItemText primary="Procesos" />{expandIcon(openCXCP)}</ListItemButton>
+            <Collapse in={openCXCP}><List sx={{ pl: 3 }}>
+              <ListItemButton onClick={() => nav("/cxc/cobros")}><ListItemText primary="Cobro" /></ListItemButton>
+            </List></Collapse>
 
-<ListItemButton onClick={() => setOpenCXCC(!openCXCC)}><ListItemText primary="Consultas"/>{expandIcon(openCXCC)}</ListItemButton>
-<Collapse in={openCXCC}><List sx={{ pl: 3 }}>
-<ListItemButton onClick={()=>nav("/cxc/clientes-consulta")}><ListItemText primary="Clientes"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/cxc/cobros-consulta")}><ListItemText primary="Cobros"/></ListItemButton>
-</List></Collapse>
+            <ListItemButton onClick={() => setOpenCXCC(!openCXCC)}><ListItemText primary="Consultas" />{expandIcon(openCXCC)}</ListItemButton>
+            <Collapse in={openCXCC}><List sx={{ pl: 3 }}>
+              <ListItemButton onClick={() => nav("/cxc/clientes-consulta")}><ListItemText primary="Clientes" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/cxc/cobros-consulta")}><ListItemText primary="Cobros" /></ListItemButton>
+            </List></Collapse>
 
-<ListItemButton onClick={() => setOpenCXCR(!openCXCR)}><ListItemText primary="Reportes"/>{expandIcon(openCXCR)}</ListItemButton>
-<Collapse in={openCXCR}><List sx={{ pl: 3 }}>
-<ListItemButton onClick={()=>nav("/cxc/reportes-clientes")}><ListItemText primary="Clientes"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/cxc/reportes-cobros")}><ListItemText primary="Cobros"/></ListItemButton>
-</List></Collapse>
+            
 
-</List></Collapse>
+          </List></Collapse>
 
-{/* CUENTAS POR PAGAR */}
-<ListItemButton onClick={() => setOpenCXP(!openCXP)}>
-<ListItemIcon><ShoppingCartIcon /></ListItemIcon>
-<ListItemText primary="Cuentas por Pagar" />
-{expandIcon(openCXP)}
-</ListItemButton>
+          {/* CUENTAS POR PAGAR */}
+          <ListItemButton onClick={() => setOpenCXP(!openCXP)}>
+            <ListItemIcon><ShoppingCartIcon /></ListItemIcon>
+            <ListItemText primary="Cuentas por Pagar" />
+            {expandIcon(openCXP)}
+          </ListItemButton>
 
-<Collapse in={openCXP}><List sx={{ pl: 3 }}>
-<ListItemButton onClick={() => setOpenCXPM(!openCXPM)}><ListItemText primary="Mantenimiento"/>{expandIcon(openCXPM)}</ListItemButton>
-<Collapse in={openCXPM}><List sx={{ pl: 3 }}>
-<ListItemButton onClick={()=>nav("/cxp/proveedores")}><ListItemText primary="Proveedores"/></ListItemButton>
-</List></Collapse>
+          <Collapse in={openCXP}><List sx={{ pl: 3 }}>
+            <ListItemButton onClick={() => setOpenCXPM(!openCXPM)}><ListItemText primary="Mantenimiento" />{expandIcon(openCXPM)}</ListItemButton>
+            <Collapse in={openCXPM}><List sx={{ pl: 3 }}>
+              <ListItemButton onClick={() => nav("/cxp/proveedores")}><ListItemText primary="Proveedores" /></ListItemButton>
+            </List></Collapse>
 
-<ListItemButton onClick={() => setOpenCXPP(!openCXPP)}><ListItemText primary="Procesos"/>{expandIcon(openCXPP)}</ListItemButton>
-<Collapse in={openCXPP}><List sx={{ pl: 3 }}>
-<ListItemButton onClick={()=>nav("/cxp/pagos")}><ListItemText primary="Pago"/></ListItemButton>
-</List></Collapse>
+            <ListItemButton onClick={() => setOpenCXPP(!openCXPP)}><ListItemText primary="Procesos" />{expandIcon(openCXPP)}</ListItemButton>
+            <Collapse in={openCXPP}><List sx={{ pl: 3 }}>
+              <ListItemButton onClick={() => nav("/cxp/pagos")}><ListItemText primary="Pago" /></ListItemButton>
+            </List></Collapse>
 
-<ListItemButton onClick={() => setOpenCXPC(!openCXPC)}><ListItemText primary="Consultas"/>{expandIcon(openCXPC)}</ListItemButton>
-<Collapse in={openCXPC}><List sx={{ pl: 3 }}>
-<ListItemButton onClick={()=>nav("/cxp/proveedores-consulta")}><ListItemText primary="Proveedores"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/cxp/pagos-consulta")}><ListItemText primary="Pagos"/></ListItemButton>
-</List></Collapse>
+            <ListItemButton onClick={() => setOpenCXPC(!openCXPC)}><ListItemText primary="Consultas" />{expandIcon(openCXPC)}</ListItemButton>
+            <Collapse in={openCXPC}><List sx={{ pl: 3 }}>
+              <ListItemButton onClick={() => nav("/cxp/proveedores-consulta")}><ListItemText primary="Proveedores" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/cxp/pagos-consulta")}><ListItemText primary="Pagos" /></ListItemButton>
+            </List></Collapse>
 
-<ListItemButton onClick={() => setOpenCXPR(!openCXPR)}><ListItemText primary="Reportes"/>{expandIcon(openCXPR)}</ListItemButton>
-<Collapse in={openCXPR}><List sx={{ pl: 3 }}>
-<ListItemButton onClick={()=>nav("/cxp/reportes-proveedores")}><ListItemText primary="Proveedores"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/cxp/reportes-pagos")}><ListItemText primary="Pagos"/></ListItemButton>
-</List></Collapse>
-</List></Collapse>
+            
+          </List></Collapse>
 
-{/* CONFIGURACIÓN */}
-<ListItemButton onClick={() => setOpenCFG(!openCFG)}>
-<ListItemIcon><SettingsIcon /></ListItemIcon>
-<ListItemText primary="Configuración" />
-{expandIcon(openCFG)}
-</ListItemButton>
+          {/* CONFIGURACIÓN */}
+          <ListItemButton onClick={() => setOpenCFG(!openCFG)}>
+            <ListItemIcon><SettingsIcon /></ListItemIcon>
+            <ListItemText primary="Configuración" />
+            {expandIcon(openCFG)}
+          </ListItemButton>
 
-<Collapse in={openCFG}><List sx={{ pl: 3 }}>
-<ListItemButton onClick={() => setOpenCFGM(!openCFGM)}><ListItemText primary="Mantenimiento"/>{expandIcon(openCFGM)}</ListItemButton>
-<Collapse in={openCFGM}><List sx={{ pl: 3 }}>
-<ListItemButton onClick={()=>nav("/config/usuarios")}><ListItemText primary="Usuario"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/config/usuario-ventana")}><ListItemText primary="Usuario vs Ventana"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/config/empresa")}><ListItemText primary="Empresa"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/config/roles")}><ListItemText primary="Roles"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/config/moneda")}><ListItemText primary="Moneda"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/config/condicion")}><ListItemText primary="Condición"/></ListItemButton>
-</List></Collapse>
+          <Collapse in={openCFG}><List sx={{ pl: 3 }}>
+            <ListItemButton onClick={() => setOpenCFGM(!openCFGM)}><ListItemText primary="Mantenimiento" />{expandIcon(openCFGM)}</ListItemButton>
+            <Collapse in={openCFGM}><List sx={{ pl: 3 }}>
+              <ListItemButton onClick={() => nav("/config/usuarios")}><ListItemText primary="Usuario" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/config/usuario-ventana")}><ListItemText primary="Usuario vs Ventana" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/config/empresa")}><ListItemText primary="Empresa" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/config/roles")}><ListItemText primary="Roles" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/config/moneda")}><ListItemText primary="Moneda" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/config/condicion")}><ListItemText primary="Condición" /></ListItemButton>
+            </List></Collapse>
 
-<ListItemButton onClick={() => setOpenCFGC(!openCFGC)}><ListItemText primary="Consultas"/>{expandIcon(openCFGC)}</ListItemButton>
-<Collapse in={openCFGC}><List sx={{ pl: 3 }}>
-<ListItemButton onClick={()=>nav("/config/usuarios-consulta")}><ListItemText primary="Usuario"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/config/usuario-ventana-consulta")}><ListItemText primary="Usuario vs Ventana"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/config/empresa-consulta")}><ListItemText primary="Empresa"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/config/roles-consulta")}><ListItemText primary="Roles"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/config/moneda-consulta")}><ListItemText primary="Moneda"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/config/condicion-consulta")}><ListItemText primary="Condición"/></ListItemButton>
-</List></Collapse>
+            <ListItemButton onClick={() => setOpenCFGC(!openCFGC)}><ListItemText primary="Consultas" />{expandIcon(openCFGC)}</ListItemButton>
+            <Collapse in={openCFGC}><List sx={{ pl: 3 }}>
+              <ListItemButton onClick={() => nav("/config/usuarios-consulta")}><ListItemText primary="Usuario" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/config/usuario-ventana-consulta")}><ListItemText primary="Usuario vs Ventana" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/config/empresa-consulta")}><ListItemText primary="Empresa" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/config/roles-consulta")}><ListItemText primary="Roles" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/config/moneda-consulta")}><ListItemText primary="Moneda" /></ListItemButton>
+              <ListItemButton onClick={() => nav("/config/condicion-consulta")}><ListItemText primary="Condición" /></ListItemButton>
+            </List></Collapse>
 
-<ListItemButton onClick={() => setOpenCFGR(!openCFGR)}><ListItemText primary="Reportes"/>{expandIcon(openCFGR)}</ListItemButton>
-<Collapse in={openCFGR}><List sx={{ pl: 3 }}>
-<ListItemButton onClick={()=>nav("/config/reportes-usuarios")}><ListItemText primary="Usuario"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/config/reportes-usuario-ventana")}><ListItemText primary="Usuario vs Ventana"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/config/reportes-empresa")}><ListItemText primary="Empresa"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/config/reportes-roles")}><ListItemText primary="Roles"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/config/reportes-moneda")}><ListItemText primary="Moneda"/></ListItemButton>
-<ListItemButton onClick={()=>nav("/config/reportes-condicion")}><ListItemText primary="Condición"/></ListItemButton>
-</List></Collapse>
-</List></Collapse>
+            
+          </List></Collapse>
 
-{/* CERRAR SESIÓN */}
-<ListItemButton onClick={logout}>
-  <ListItemIcon><LogoutIcon /></ListItemIcon>
-  <ListItemText primary="Cerrar Sesión"/>
-</ListItemButton>
+          {/* CERRAR SESIÓN */}
+          <ListItemButton onClick={logout}>
+            <ListItemIcon><LogoutIcon /></ListItemIcon>
+            <ListItemText primary="Cerrar Sesión" />
+          </ListItemButton>
 
         </List>
       </Drawer>
