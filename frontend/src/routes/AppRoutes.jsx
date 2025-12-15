@@ -31,6 +31,10 @@ import AjusteInventario from '../pages/AjusteInventario/AjusteInventario.jsx';
 import DevolucionFactura from '../pages/Devoluciones/DevolucionFactura.jsx';
 import AbonosScreen from '../pages/Abonos/AbonosScreen.jsx';
 import PagosScreen from '../pages/Pagos/PagosScreen.jsx';
+import PagosConsulta from '../pages/Pagos/PagosConsulta.jsx';
+import CobrosConsulta from '../pages/Abonos/CobroConsulta.jsx';
+import FacturasConsulta from '../pages/Factura/FacturaConsulta.jsx';
+import AjusteInventarioConsulta from '../pages/AjusteInventario/AjusteInventarioConsulta.jsx';
 
 
 import PosPage from '../pages/Factura/PosPage.jsx';
@@ -392,6 +396,50 @@ export default function AppRoutes() {
             <PermisoRoute permiso="cxp_pagos">
               <DashboardLayout>
                 <PagosScreen />
+              </DashboardLayout>
+            </PermisoRoute>
+          }
+        />
+
+        <Route
+          path="/cxp/pagos-consulta"
+          element={
+            <PermisoRoute permiso="cxp_pagos">
+              <DashboardLayout>
+                <PagosConsulta />
+              </DashboardLayout>
+            </PermisoRoute>
+          }
+        />
+
+        <Route
+          path="/cxc/cobros-consulta"
+          element={
+            <PermisoRoute permiso="cxc_cobros">
+              <DashboardLayout>
+                <CobrosConsulta />
+              </DashboardLayout>
+            </PermisoRoute>
+          }
+        />
+
+        <Route
+          path="/consultas/facturas"
+          element={
+            <PermisoRoute permiso="inv_facturacion">
+              <DashboardLayout>
+                <FacturasConsulta />
+              </DashboardLayout>
+            </PermisoRoute>
+          }
+        />
+
+        <Route
+          path="/consultas/entradas-salidas"
+          element={
+            <PermisoRoute permiso="inv_movimientos">
+              <DashboardLayout>
+                <AjusteInventarioConsulta />
               </DashboardLayout>
             </PermisoRoute>
           }

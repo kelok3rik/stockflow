@@ -11,9 +11,7 @@ export default function usePos() {
     const [carrito, setCarrito] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // =======================================================
-    // Normalización de datos
-    // =======================================================
+   
     const normalizeProduct = (p) => ({
         ...p,
         id_productos: Number(p.id_productos),
@@ -39,9 +37,6 @@ export default function usePos() {
         dias_plazo: Number(cp.dias_plazo),
     });
 
-    // =======================================================
-    // Cargar productos, clientes y condiciones de pago
-    // =======================================================
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -69,9 +64,63 @@ export default function usePos() {
         fetchData();
     }, []);
 
-    // =======================================================
-    // Carrito
-    // =======================================================
+    
+    const procesarCotizacion = async (cliente_id = null, usuario_id = 1) => {
+        if (carrito.length === 0) {
+            return { error: "Debe agregar productos a la cotización." };
+        }
+
+        const clienteIdNum = cliente_id ? Number(cliente_id) : null;
+
+        const payload = {
+            cliente_id: clienteIdNum,
+            usuario_id,
+            total,
+            detalles: carrito.map(i => ({
+                producto_id: i.id_productos,
+                cantidad: i.cantidad,
+                precio_unitario: i.precio_unitario,
+                nombre: i.nombre
+            })),
+        };
+
+        try {
+            const res = await axios.post(`${API_URL}/api/cotizaciones`, payload);
+            const respuesta = res.data;
+
+            const cliente = clientes.find(c => c.id === clienteIdNum);
+
+            const cotizacionPDF = {
+                tipo: "Cotización",
+                numero_documento: respuesta.numero_documento,
+                fecha: new Date().toLocaleString(),
+                cliente_nombre: cliente?.nombre || "Cliente no especificado",
+                condicion_pago: "—",
+                detalles: carrito.map(item => ({
+                    nombre: item.nombre,
+                    cantidad: item.cantidad,
+                    precio_unitario: item.precio_unitario,
+                })),
+                total,
+                monto_recibido: null,
+                cambio: null,
+            };
+
+            // GENERAR PDF AUTOMÁTICO
+            generarDocumentoPDF(cotizacionPDF);
+
+            setCarrito([]);
+            return respuesta;
+
+        } catch (err) {
+            console.error("Error al procesar cotización:", err.response?.data);
+            return {
+                error: err.response?.data?.message || "Error generando cotización"
+            };
+        }
+    };
+
+
     const addToCart = (producto) => {
         const existe = carrito.find(i => i.id_productos === producto.id_productos);
         if (existe) {
@@ -96,9 +145,7 @@ export default function usePos() {
 
     const total = carrito.reduce((acc, item) => acc + item.cantidad * item.precio_unitario, 0);
 
-    // =======================================================
-    // Procesar factura y generar PDF automático
-    // =======================================================
+    
     const procesarFactura = async (cliente_id, condicion_pago_id, monto_recibido, cambio, usuario_id = 1) => {
         if (!cliente_id) return { error: "Debe seleccionar un cliente." };
         if (!condicion_pago_id) return { error: "Debe seleccionar una condición de pago." };
@@ -180,5 +227,7 @@ export default function usePos() {
         changeQuantity,
         removeFromCart,
         procesarFactura,
+        procesarCotizacion,
     };
+
 }

@@ -192,7 +192,6 @@ export default function ProveedoresConsulta() {
           <Table stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
                 <TableCell>Nombre</TableCell>
                 <TableCell>RNC</TableCell>
                 <TableCell>Email</TableCell>
@@ -213,7 +212,6 @@ export default function ProveedoresConsulta() {
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((p) => (
                     <TableRow key={p.id_proveedores}>
-                      <TableCell>{p.id_proveedores}</TableCell>
                       <TableCell>{p.nombre}</TableCell>
                       <TableCell>{p.rnc}</TableCell>
                       <TableCell>{p.email}</TableCell>

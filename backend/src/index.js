@@ -22,6 +22,8 @@ import facturaRoutes from "./routes/facturaRoutes.js";
 import compraRoutes from "./routes/compraRoutes.js";
 import movimientoInventarioRoutes from "./routes/movimientoInventarioRoutes.js";
 import devolucionRoutes from "./routes/devolucionRoutes.js";
+import pagoRoutes from "./routes/pagoRoutes.js";
+import cobroRoutes from "./routes/cobroRoutes.js";
 
 dotenv.config();
 
@@ -54,6 +56,8 @@ app.use("/api/cotizaciones", cotizacionRoutes);
 app.use("/api/compras", compraRoutes);
 app.use("/api/movimientos-inventario", movimientoInventarioRoutes);
 app.use("/api/devoluciones", devolucionRoutes);
+app.use("/api/pagos", pagoRoutes);
+app.use("/api/cobros", cobroRoutes);
 
 // --------------------------
 //          SERVER

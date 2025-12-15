@@ -68,8 +68,8 @@ export default function ClientesConsulta() {
       filtros.activo === ""
         ? true
         : filtros.activo === "true"
-        ? c.activo === true
-        : c.activo === false;
+          ? c.activo === true
+          : c.activo === false;
 
     return nombreMatch && docMatch && emailMatch && telefonoMatch && direccionMatch && activoMatch;
   });
@@ -187,7 +187,7 @@ export default function ClientesConsulta() {
           <Table stickyHeader>
             <TableHead>
               <TableRow>
-                <TableCell>ID</TableCell>
+
                 <TableCell>Nombre</TableCell>
                 <TableCell>Documento</TableCell>
                 <TableCell>Email</TableCell>
@@ -208,7 +208,7 @@ export default function ClientesConsulta() {
                   .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                   .map((c) => (
                     <TableRow key={c.id_clientes}>
-                      <TableCell>{c.id_clientes}</TableCell>
+
                       <TableCell>{c.nombre}</TableCell>
                       <TableCell>{c.doc_identidad}</TableCell>
                       <TableCell>{c.email}</TableCell>
