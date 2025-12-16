@@ -100,7 +100,6 @@ export default function Navbar() {
             </ListItemButton>
             <Collapse in={openInvP}><List sx={{ pl: 3 }}>
               <ListItemButton onClick={() => nav("/procesos/facturacion")}><ListItemText primary="Facturación" /></ListItemButton>
-              <ListItemButton onClick={() => nav("/procesos/cotizacion")}><ListItemText primary="Cotización" /></ListItemButton>
               <ListItemButton onClick={() => nav("/procesos/compras")}><ListItemText primary="Compras" /></ListItemButton>
               <ListItemButton onClick={() => nav("/procesos/entradas-salidas")}><ListItemText primary="Entradas / Salidas" /></ListItemButton>
               <ListItemButton onClick={() => nav("/procesos/devoluciones")}><ListItemText primary="Devoluciones" /></ListItemButton>

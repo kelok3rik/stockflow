@@ -111,7 +111,7 @@ export default function CotizacionesConsulta() {
         if (!cotizacionSeleccionada) return;
 
         const payload = {
-            condicion_id: condicionId,
+            condicion_id: Number(condicionId),
             monto_recibido: Number(montoRecibido) || 0,
         };
 
@@ -121,31 +121,50 @@ export default function CotizacionesConsulta() {
                 payload
             );
 
-            // Aquí usamos directamente los datos que vienen
-            const { factura_id, numero_documento, message } = res.data;
+            const { factura } = res.data;
 
-            console.log(message);
+            if (!factura) {
+                console.error("No se recibió la factura del backend", res.data);
+                return;
+            }
+
+            if (!factura.numero_documento) {
+                console.error("Factura sin número:", factura);
+                return;
+            }
+
+            if (!factura.detalles || factura.detalles.length === 0) {
+                console.error("Factura sin detalles:", factura);
+                return;
+            }
 
             generarDocumentoPDF({
                 tipo: "Factura",
-                numero_documento,
-                fecha: new Date().toLocaleString(),
-                cliente_nombre: cotizacionSeleccionada.cliente,
-                condicion_pago: condicionesPago.find(c => c.id_condiciones_pago === condicionId)?.nombre || "",
-                detalles: cotizacionSeleccionada.detalles,
-                total: cotizacionSeleccionada.total,
-                monto_recibido: Number(montoRecibido) || 0,
-                cambio: 0,
+                numero_documento: factura.numero_documento,
+                fecha: new Date(factura.fecha).toLocaleString(),
+                cliente_nombre: factura.cliente_nombre,
+                condicion_pago: factura.condicion_pago,
+                detalles: factura.detalles.map(d => ({
+                    producto: d.nombre || "Producto sin nombre",
+                    cantidad: d.cantidad,
+                    precio_unitario: d.precio_unitario,
+                    subtotal: d.subtotal
+                })),
+                total: factura.total,
+                monto_recibido: factura.monto_recibido,
+                cambio: factura.cambio,
             });
 
             setOpenConvertir(false);
             loadCotizaciones();
 
         } catch (err) {
-            console.error("Error al convertir cotización:", err.response?.data || err.message);
+            console.error(
+                "Error al convertir cotización:",
+                err.response?.data || err.message
+            );
         }
     };
-
 
 
     const condicionSeleccionada = condicionesPago.find((c) => c.id_condiciones_pago === condicionId);
@@ -210,7 +229,7 @@ export default function CotizacionesConsulta() {
                     <TableHead>
                         <TableRow>
                             <TableCell />
-                            <TableCell>ID</TableCell>
+                            <TableCell># Cot</TableCell>
                             <TableCell>Cliente</TableCell>
                             <TableCell>Fecha</TableCell>
                             <TableCell>Total</TableCell>

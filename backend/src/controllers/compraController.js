@@ -165,27 +165,59 @@ export const createCompra = async (req, res) => {
 
 
 export const getCompras = async (req, res) => {
-  const limit = parseInt(req.query.limit) || 50;
-  const offset = parseInt(req.query.offset) || 0;
-
   try {
-    const text = `
-      SELECT c.*,
-             p.nombre AS proveedor_nombre,
-             u.nombre AS usuario_nombre
+    const query = `
+      SELECT
+        c.id_compras,
+        c.numero_documento,
+        c.fecha,
+        c.total,
+        c.estado,
+        c.activo,
+
+        p.nombre AS proveedor_nombre,
+        u.nombre AS usuario_nombre,
+
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'id_compra_detalle', cd.id_compra_detalle,
+              'producto_id', cd.producto_id,
+              'producto', pr.nombre,
+              'cantidad', cd.cantidad,
+              'costo_unitario', cd.costo_unitario,
+              'subtotal', cd.cantidad * cd.costo_unitario
+            )
+          ) FILTER (WHERE cd.id_compra_detalle IS NOT NULL),
+          '[]'
+        ) AS detalles
+
       FROM compra c
       LEFT JOIN proveedor p ON p.id_proveedores = c.proveedor_id
       LEFT JOIN usuario u ON u.id_usuarios = c.usuario_id
-      ORDER BY c.fecha DESC, c.id_compras DESC
-      LIMIT $1 OFFSET $2;
+      LEFT JOIN compra_detalle cd ON cd.compra_id = c.id_compras
+      LEFT JOIN producto pr ON pr.id_productos = cd.producto_id
+
+      GROUP BY
+        c.id_compras,
+        p.nombre,
+        u.nombre
+
+      ORDER BY c.fecha DESC, c.id_compras DESC;
     `;
-    const { rows } = await pool.query(text, [limit, offset]);
+
+    const { rows } = await pool.query(query);
+
     return res.json(rows);
   } catch (err) {
-    console.error('getCompras error:', err);
-    return res.status(500).json({ message: 'Error al obtener compras', error: err.message });
+    console.error("getCompras error:", err);
+    return res.status(500).json({
+      message: "Error al obtener compras",
+      error: err.message
+    });
   }
 };
+
 
 
 export const getCompraById = async (req, res) => {

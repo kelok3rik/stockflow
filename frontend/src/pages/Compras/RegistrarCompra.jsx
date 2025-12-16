@@ -104,7 +104,7 @@ export default function RegistrarCompra() {
         numero_documento: response.numero_documento,
         fecha: new Date().toLocaleDateString(),
         cliente_nombre: proveedores.find(p => p.id_proveedores === proveedorId)?.nombre || "Proveedor",
-        condicion_pago: "Contado",
+        condicion_pago: "Credito",
         detalles: body.detalles,
         total: totalGeneral,
         monto_recibido: null,

@@ -254,9 +254,14 @@ export const convertirCotizacionAFactura = async (req, res) => {
 
     await client.query("BEGIN");
 
+    // ===============================
+    // 1. Obtener cotización
+    // ===============================
     const cotizacionRes = await client.query(
-      `SELECT * FROM cotizacion 
-       WHERE id_cotizaciones = $1 AND activo = true`,
+      `SELECT c.*, cl.nombre AS cliente_nombre
+       FROM cotizacion c
+       JOIN cliente cl ON cl.id_clientes = c.cliente_id
+       WHERE c.id_cotizaciones = $1 AND c.activo = true`,
       [id]
     );
 
@@ -267,8 +272,18 @@ export const convertirCotizacionAFactura = async (req, res) => {
 
     const cotizacion = cotizacionRes.rows[0];
 
+    // ===============================
+    // 2. Obtener detalles con nombre de producto
+    // ===============================
     const detallesRes = await client.query(
-      `SELECT * FROM cotizacion_detalle WHERE cotizacion_id = $1`,
+      `SELECT cd.producto_id,
+              cd.cantidad,
+              cd.precio_unitario,
+              p.nombre,
+              p.costo
+       FROM cotizacion_detalle cd
+       JOIN producto p ON p.id_productos = cd.producto_id
+       WHERE cd.cotizacion_id = $1 AND cd.activo = true`,
       [id]
     );
 
@@ -277,9 +292,12 @@ export const convertirCotizacionAFactura = async (req, res) => {
       return res.status(400).json({ message: "Cotización sin detalles" });
     }
 
+    // ===============================
+    // 3. Condición de pago
+    // ===============================
     const condicionRes = await client.query(
-      `SELECT dias_plazo 
-       FROM condicion_pago 
+      `SELECT nombre, dias_plazo
+       FROM condicion_pago
        WHERE id_condiciones_pago = $1 AND activo = true`,
       [condicion_id]
     );
@@ -288,8 +306,8 @@ export const convertirCotizacionAFactura = async (req, res) => {
       throw new Error("Condición de pago inválida");
     }
 
-    const diasPlazo = Number(condicionRes.rows[0].dias_plazo);
-    const esContado = diasPlazo === 0;
+    const { nombre: condicionNombre, dias_plazo } = condicionRes.rows[0];
+    const esContado = Number(dias_plazo) === 0;
 
     const total = Number(cotizacion.total);
     const recibido = Number(monto_recibido);
@@ -302,18 +320,24 @@ export const convertirCotizacionAFactura = async (req, res) => {
     const saldo = esContado ? 0 : total;
     const estadoFactura = esContado ? "PAGADA" : "PENDIENTE";
 
+    // ===============================
+    // 4. Generar número de factura
+    // ===============================
     const numeroRes = await client.query(
-      `SELECT COALESCE(MAX(numero_documento::integer),0) + 1 AS next_num 
+      `SELECT COALESCE(MAX(numero_documento::integer), 0) + 1 AS next_num
        FROM factura`
     );
 
     const numeroDocumento = String(numeroRes.rows[0].next_num).padStart(6, "0");
 
+    // ===============================
+    // 5. Insertar factura
+    // ===============================
     const facturaRes = await client.query(
       `INSERT INTO factura
        (numero_documento, cliente_id, usuario_id, condicion_id, total, saldo, estado, fecha, activo)
        VALUES ($1,$2,$3,$4,$5,$6,$7,NOW(),true)
-       RETURNING id_facturas`,
+       RETURNING id_facturas, fecha`,
       [
         numeroDocumento,
         cotizacion.cliente_id,
@@ -326,7 +350,11 @@ export const convertirCotizacionAFactura = async (req, res) => {
     );
 
     const facturaId = facturaRes.rows[0].id_facturas;
+    const facturaFecha = facturaRes.rows[0].fecha;
 
+    // ===============================
+    // 6. Movimiento de inventario
+    // ===============================
     const movRes = await client.query(
       `SELECT COALESCE(MAX(id_movimientos_inventario),0) + 1 AS next_num
        FROM movimiento_inventario`
@@ -349,45 +377,45 @@ export const convertirCotizacionAFactura = async (req, res) => {
 
     const movimientoId = movimientoRes.rows[0].id_movimientos_inventario;
 
+    // ===============================
+    // 7. Detalles de factura + inventario
+    // ===============================
+    const detallesFactura = [];
+
     for (const d of detallesRes.rows) {
       await client.query(
         `INSERT INTO factura_detalle
          (factura_id, producto_id, cantidad, precio_unitario, activo)
          VALUES ($1,$2,$3,$4,true)`,
-        [
-          facturaId,
-          d.producto_id,
-          d.cantidad,
-          d.precio_unitario
-        ]
-      );
-
-      const costoRes = await client.query(
-        `SELECT costo FROM producto WHERE id_productos = $1`,
-        [d.producto_id]
+        [facturaId, d.producto_id, d.cantidad, d.precio_unitario]
       );
 
       await client.query(
         `INSERT INTO movimiento_inventario_detalle
          (movimiento_inventario_id, producto_id, cantidad, costo_unitario, activo)
          VALUES ($1,$2,$3,$4,true)`,
-        [
-          movimientoId,
-          d.producto_id,
-          d.cantidad * -1,
-          costoRes.rows[0].costo
-        ]
+        [movimientoId, d.producto_id, d.cantidad * -1, d.costo]
       );
 
       await client.query(
-        `UPDATE producto 
-         SET stock = stock - $1 
+        `UPDATE producto
+         SET stock = stock - $1
          WHERE id_productos = $2`,
         [d.cantidad, d.producto_id]
       );
+
+      detallesFactura.push({
+        producto_id: d.producto_id,
+        nombre: d.nombre,
+        cantidad: d.cantidad,
+        precio_unitario: d.precio_unitario,
+        subtotal: d.cantidad * d.precio_unitario
+      });
     }
 
-    // ✅ CORRECTO: desactivar cotización
+    // ===============================
+    // 8. Desactivar cotización
+    // ===============================
     await client.query(
       `UPDATE cotizacion SET activo = false WHERE id_cotizaciones = $1`,
       [id]
@@ -395,10 +423,22 @@ export const convertirCotizacionAFactura = async (req, res) => {
 
     await client.query("COMMIT");
 
+    // ===============================
+    // 9. Respuesta al frontend
+    // ===============================
     res.status(201).json({
       message: "Cotización convertida en factura",
-      factura_id: facturaId,
-      numero_documento: numeroDocumento
+      factura: {
+        id_factura: facturaId,
+        numero_documento: numeroDocumento,
+        fecha: facturaFecha,
+        cliente_nombre: cotizacion.cliente_nombre,
+        condicion_pago: condicionNombre,
+        detalles: detallesFactura,
+        total,
+        monto_recibido: recibido,
+        cambio: esContado ? recibido - total : 0
+      }
     });
 
   } catch (error) {

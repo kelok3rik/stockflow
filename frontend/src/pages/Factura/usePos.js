@@ -177,6 +177,17 @@ export default function usePos() {
             const respuesta = res.data;
             const cliente = clientes.find(c => c.id === clienteIdNum);
 
+            // ✅ Actualizar stock de productos
+            const productosActualizados = productos.map(p => {
+                const itemCarrito = carrito.find(c => c.id_productos === p.id_productos);
+                if (itemCarrito) {
+                    return { ...p, stock: p.stock - itemCarrito.cantidad };
+                }
+                return p;
+            });
+            setProductos(productosActualizados);
+
+            // Generar PDF
             const facturaPDF = {
                 tipo: "Factura",
                 numero_documento: respuesta.numero_documento,
@@ -191,7 +202,8 @@ export default function usePos() {
             };
 
             generarDocumentoPDF(facturaPDF);
-            setCarrito([]);
+
+            setCarrito([]); // Limpiar carrito
             return respuesta;
 
         } catch (err) {
@@ -199,6 +211,7 @@ export default function usePos() {
             return { error: err.response?.data?.message || "Error procesando factura" };
         }
     };
+
 
     return {
         productos,
