@@ -106,4 +106,66 @@ export const createDevolucion = async (req, res) => {
   }
 };
 
+export const getDevoluciones = async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+  d.id_devoluciones,
+  d.numero_documento,
+  d.fecha,
+  d.total,
+  d.factura_id,
+
+  u.nombre AS usuario,
+
+  COALESCE(
+    json_agg(
+      json_build_object(
+        'detalle_id', mid.id_movi_invd,
+        'producto_id', p.id_productos,
+        'producto', p.nombre,
+        'cantidad', mid.cantidad,
+        'precio_unitario', fd.precio_unitario,
+        'subtotal', mid.cantidad * fd.precio_unitario
+      )
+      ORDER BY mid.id_movi_invd
+    ) FILTER (WHERE mid.id_movi_invd IS NOT NULL),
+    '[]'
+  ) AS detalles
+
+FROM devolucion d
+
+JOIN usuario u
+  ON u.id_usuarios = d.usuario_id
+
+JOIN movimiento_inventario mi
+  ON mi.numero_documento = d.numero_documento
+
+LEFT JOIN movimiento_inventario_detalle mid
+  ON mid.movimiento_inventario_id = mi.id_movimientos_inventario
+ AND mid.activo = true
+
+LEFT JOIN producto p
+  ON p.id_productos = mid.producto_id
+
+LEFT JOIN factura_detalle fd
+  ON fd.factura_id = d.factura_id
+ AND fd.producto_id = mid.producto_id
+
+WHERE d.activo = true
+
+GROUP BY
+  d.id_devoluciones,
+  u.nombre
+
+ORDER BY d.fecha DESC;
+    `);
+
+    res.json(result.rows);
+  } catch (error) {
+    console.error("Error en getDevoluciones:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 
