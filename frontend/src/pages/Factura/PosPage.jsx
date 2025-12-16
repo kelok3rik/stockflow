@@ -1,4 +1,3 @@
-// frontend/src/pages/Factura/PosPage.jsx
 import {
     Box,
     Button,
@@ -26,6 +25,7 @@ export default function PosPage() {
         changeQuantity,
         removeFromCart,
         procesarFactura,
+        procesarCotizacion
     } = usePos();
 
     const [notificacion, setNotificacion] = useState({
@@ -77,7 +77,6 @@ export default function PosPage() {
         }
     };
 
-
     const mostrarNotificacion = (mensaje, tipo = "success") => {
         setNotificacion({ open: true, mensaje, tipo });
     };
@@ -109,36 +108,19 @@ export default function PosPage() {
                     p: 2
                 }}
             >
-                {/* LAYOUT PRINCIPAL */}
                 <Box
                     sx={{
                         flex: 1,
                         overflow: "hidden",
                         display: "flex",
                         gap: 2,
-
-                        // 🔥 BREAKPOINTS (RESPONSIVE)
-                        flexDirection: {
-                            xs: "column", // móvil
-                            sm: "column", // tablet
-                            md: "row"     // desktop
-                        }
+                        flexDirection: { xs: "column", sm: "column", md: "row" }
                     }}
                 >
-
-                    {/* IZQUIERDA: PRODUCTOS */}
                     <Box
                         sx={{
-                            flex: {
-                                xs: "1 1 100%",  // móvil
-                                sm: "1 1 100%",  // tablet
-                                md: "0 0 70%"    // desktop
-                            },
-                            maxWidth: {
-                                xs: "100%",
-                                sm: "100%",
-                                md: "70%"
-                            },
+                            flex: { xs: "1 1 100%", sm: "1 1 100%", md: "0 0 70%" },
+                            maxWidth: { xs: "100%", sm: "100%", md: "70%" },
                             minWidth: 0,
                             display: "flex",
                             flexDirection: "column",
@@ -157,51 +139,28 @@ export default function PosPage() {
                                 minWidth: 0
                             }}
                         >
-                            {/* Header productos */}
-                            <Box
-                                sx={{
-                                    p: 2,
-                                    borderBottom: "1px solid",
-                                    borderColor: "divider",
-                                    flexShrink: 0
-                                }}
-                            >
+                            <Box sx={{ p: 2, borderBottom: "1px solid", borderColor: "divider", flexShrink: 0 }}>
                                 <Typography variant="h6" fontWeight="medium">
                                     Productos Disponibles
                                 </Typography>
                             </Box>
-
-                            {/* Lista productos */}
                             <Box sx={{ flex: 1, overflowY: "auto", minWidth: 0 }}>
                                 <PosProducts productos={productos} addToCart={addToCart} />
                             </Box>
                         </Paper>
                     </Box>
 
-
-                    {/* DERECHA: CARRITO */}
                     <Box
                         sx={{
-                            flex: {
-                                xs: "1 1 100%",  // móvil
-                                sm: "1 1 100%",  // tablet
-                                md: "0 0 30%"    // desktop
-                            },
-                            maxWidth: {
-                                xs: "100%",
-                                sm: "100%",
-                                md: "30%"
-                            },
-                            minWidth: 0, // 🔥 FIX PRINCIPAL
+                            flex: { xs: "1 1 100%", sm: "1 1 100%", md: "0 0 30%" },
+                            maxWidth: { xs: "100%", sm: "100%", md: "30%" },
+                            minWidth: 0,
                             display: "flex",
                             flexDirection: "column",
                             height: "100%",
                             overflow: "hidden",
                             pl: { md: 1 },
-                            borderLeft: {
-                                xs: "none",
-                                md: "1px solid"
-                            },
+                            borderLeft: { xs: "none", md: "1px solid" },
                             borderColor: "divider",
                             boxSizing: "border-box"
                         }}
@@ -219,14 +178,12 @@ export default function PosPage() {
                             total={total}
                             procesando={procesando}
                             onProcesarFactura={handleProcesar}
+                            procesarCotizacion={procesarCotizacion}
                         />
                     </Box>
-
                 </Box>
             </Box>
 
-
-            {/* Notificaciones */}
             <Snackbar
                 open={notificacion.open}
                 autoHideDuration={4000}
@@ -237,10 +194,7 @@ export default function PosPage() {
                     onClose={cerrarNotificacion}
                     severity={notificacion.tipo}
                     variant="filled"
-                    sx={{
-                        width: "100%",
-                        '& .MuiAlert-icon': { alignItems: 'center' }
-                    }}
+                    sx={{ width: "100%", '& .MuiAlert-icon': { alignItems: 'center' } }}
                 >
                     {notificacion.mensaje}
                 </Alert>

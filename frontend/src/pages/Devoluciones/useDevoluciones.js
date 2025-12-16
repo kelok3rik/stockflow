@@ -15,6 +15,7 @@ export default function useDevolucionFactura() {
       try {
         const res = await axios.get(`${API_URL}/api/facturas`);
         setFacturas(res.data);
+        console.log("Facturas cargadas:", res.data);
       } catch (error) {
         console.error("Error cargando facturas:", error);
         setFacturas([]);
@@ -32,6 +33,7 @@ export default function useDevolucionFactura() {
         cantidad_devuelta: 0
       }));
       setDetalles(data);
+      
     } catch (error) {
       console.error("Error cargando detalles de factura:", error);
       setDetalles([]);

@@ -1,10 +1,9 @@
-// frontend/src/utils/generarFactura.js
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 export function generarDocumentoPDF(data) {
   const {
-    tipo = "Documento", // Factura | Compra | Ajuste
+    tipo = "Documento",
     numero_documento,
     fecha,
     cliente_nombre,
@@ -13,16 +12,14 @@ export function generarDocumentoPDF(data) {
     total,
     monto_recibido,
     cambio,
+    generado_por
   } = data;
 
   const doc = new jsPDF({
     unit: "pt",
-    format: [396, 612], // media carta
+    format: [396, 612],
   });
 
-  // ======================
-  // ENCABEZADO
-  // ======================
   doc.setFontSize(16);
   doc.text(tipo.toUpperCase(), 30, 40);
 
@@ -35,28 +32,17 @@ export function generarDocumentoPDF(data) {
     doc.text(`Condición: ${condicion_pago || ""}`, 30, 110);
   }
 
-  // ======================
-  // TABLA
-  // ======================
   let startY = tipo === "Ajuste" ? 100 : 130;
 
   if (detalles.length > 0) {
-
-    // 🟦 AJUSTE DE INVENTARIO
     if (tipo === "Ajuste") {
       autoTable(doc, {
         startY,
         head: [["Producto", "Cantidad", "Movimiento"]],
-        body: detalles.map(d => [
-          d.nombre,
-          d.cantidad,
-          d.movimiento
-        ]),
+        body: detalles.map(d => [d.nombre, d.cantidad, d.movimiento]),
         theme: "grid",
         styles: { fontSize: 9 },
       });
-
-    // 🟩 FACTURA / COMPRA
     } else {
       autoTable(doc, {
         startY,
@@ -64,12 +50,7 @@ export function generarDocumentoPDF(data) {
         body: detalles.map(d => {
           const cant = Number(d.cantidad) || 0;
           const precio = Number(d.precio_unitario) || 0;
-          return [
-            d.nombre,
-            cant,
-            precio.toFixed(2),
-            (cant * precio).toFixed(2)
-          ];
+          return [d.nombre, cant, precio.toFixed(2), (cant * precio).toFixed(2)];
         }),
         theme: "grid",
         styles: { fontSize: 9 },
@@ -77,9 +58,6 @@ export function generarDocumentoPDF(data) {
     }
   }
 
-  // ======================
-  // TOTALES (SOLO FACTURA / COMPRA)
-  // ======================
   if (tipo !== "Ajuste") {
     let finalY = doc.lastAutoTable?.finalY
       ? doc.lastAutoTable.finalY + 20
@@ -89,22 +67,16 @@ export function generarDocumentoPDF(data) {
     doc.text(`TOTAL: RD$ ${(Number(total) || 0).toFixed(2)}`, 30, finalY);
 
     if (monto_recibido != null && cambio != null) {
-      doc.text(
-        `Monto recibido: RD$ ${(Number(monto_recibido) || 0).toFixed(2)}`,
-        30,
-        finalY + 20
-      );
-      doc.text(
-        `Cambio: RD$ ${(Number(cambio) || 0).toFixed(2)}`,
-        30,
-        finalY + 40
-      );
+      doc.text(`Monto recibido: RD$ ${(Number(monto_recibido) || 0).toFixed(2)}`, 30, finalY + 20);
+      doc.text(`Cambio: RD$ ${(Number(cambio) || 0).toFixed(2)}`, 30, finalY + 40);
+    }
+
+    if (generado_por) {
+      doc.setFontSize(9);
+      doc.text(`Generado por: ${generado_por}`, 30, finalY + 60);
     }
   }
 
-  // ======================
-  // DESCARGA
-  // ======================
   const nombreArchivo = `${tipo}_${numero_documento || "0000"}.pdf`;
   doc.save(nombreArchivo);
 }

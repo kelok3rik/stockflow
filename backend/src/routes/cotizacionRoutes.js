@@ -4,7 +4,9 @@ import {
   listarCotizaciones,
   editarCotizacion,
   obtenerCotizacion,
-  cancelarCotizacion
+  cancelarCotizacion,
+  convertirCotizacionAFactura,
+
 } from "../controllers/cotizacionController.js";
 
 const router = express.Router();
@@ -14,5 +16,6 @@ router.get("/", listarCotizaciones);
 router.get("/:id", obtenerCotizacion);
 router.put("/:id", editarCotizacion);
 router.delete("/:id", cancelarCotizacion);
+router.post("/:id/convertir", convertirCotizacionAFactura);
 
 export default router;

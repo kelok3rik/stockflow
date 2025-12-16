@@ -7,6 +7,7 @@ export const getFacturas = async (req, res) => {
       SELECT 
         f.id_facturas,
         f.fecha,
+        f.numero_documento,
         f.total,
         f.saldo,
         f.estado,

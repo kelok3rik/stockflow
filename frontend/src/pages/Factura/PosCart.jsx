@@ -1,14 +1,11 @@
-// frontend/src/pages/Factura/PosCart.jsx
 import {
   Paper,
   Typography,
   IconButton,
   TextField,
   Box,
-  Divider,
-  Chip,
   Stack,
-  Badge,
+  Chip,
   Button,
   useTheme,
   useMediaQuery,
@@ -24,7 +21,6 @@ import {
   Add as AddIcon,
   Remove as RemoveIcon,
   ShoppingCart as CartIcon,
-  Receipt as ReceiptIcon,
   Person as PersonIcon,
   Payment as PaymentIcon
 } from "@mui/icons-material";
@@ -43,21 +39,18 @@ export default function PosCart({
   changeQuantity,
   total = 0,
   procesando = false,
-  onProcesarFactura
+  onProcesarFactura,
+  procesarCotizacion
 }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // Valores locales para selects
   const [clienteSelectValue, setClienteSelectValue] = useState(
     clienteSeleccionado ? clienteSeleccionado.toString() : ""
   );
-
   const [condicionSelectValue, setCondicionSelectValue] = useState(
     condicionPagoSeleccionada ? condicionPagoSeleccionada.toString() : ""
   );
-
-  // Monto recibido (solo contado)
   const [montoRecibido, setMontoRecibido] = useState("");
 
   useEffect(() => {
@@ -71,13 +64,10 @@ export default function PosCart({
     setMontoRecibido("");
   }, [condicionPagoSeleccionada]);
 
-  // Obtener objeto completo de la condición seleccionada
   const condicionObj = condicionesPago.find(
-    (cp) =>
-      String(cp.id_condiciones_pago) === String(condicionPagoSeleccionada)
+    (cp) => String(cp.id_condiciones_pago) === String(condicionPagoSeleccionada)
   );
 
-  // Detectar si es contado
   const esContado = useMemo(() => {
     if (!condicionObj) return false;
     const byDias = Number(condicionObj.dias_plazo) === 0;
@@ -85,14 +75,12 @@ export default function PosCart({
     return byDias || byName;
   }, [condicionObj]);
 
-  // Calcular cambio
   const cambio = useMemo(() => {
     if (!esContado) return 0;
     const recibido = Number(montoRecibido) || 0;
     return recibido - Number(total || 0);
   }, [montoRecibido, total, esContado]);
 
-  // Handlers selects
   const handleClienteChange = (event) => {
     const value = event.target.value;
     setClienteSelectValue(value);
@@ -106,7 +94,6 @@ export default function PosCart({
       onCondicionPagoChange(value === "" ? null : Number(value));
   };
 
-  // Cantidades
   const handleQuantityChange = (id, newQuantity) => {
     const q = Number(newQuantity) || 0;
     if (q >= 1 && q <= 999) {
@@ -125,7 +112,6 @@ export default function PosCart({
   const getItemSubtotal = (item) =>
     (Number(item.precio_unitario) || 0) * (Number(item.cantidad) || 0);
 
-  // PROCESAR FACTURA
   const handleProcesar = () => {
     if (!clienteSeleccionado) return;
     if (!condicionPagoSeleccionada) return;
@@ -158,26 +144,13 @@ export default function PosCart({
         border: 1,
         borderColor: "divider",
         bgcolor: "background.paper",
-        minWidth: 0,          // ← FIX 1
-        maxWidth: "100%",     // ← FIX 2
-        boxSizing: "border-box", // ← FIX 3
+        minWidth: 0,
+        maxWidth: "100%",
+        boxSizing: "border-box"
       }}
     >
-
-
-
-      {/* Selectores */}
-      <Box
-        sx={{
-          p: 2,
-          borderBottom: 1,
-          borderColor: "divider",
-          bgcolor: "background.default",
-          flexShrink: 0
-        }}
-      >
+      <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider", bgcolor: "background.default", flexShrink: 0 }}>
         <Stack spacing={2}>
-          {/* Cliente */}
           <FormControl fullWidth size="small">
             <InputLabel>
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -196,7 +169,6 @@ export default function PosCart({
             </Select>
           </FormControl>
 
-          {/* Condición de pago */}
           <FormControl fullWidth size="small">
             <InputLabel>
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
@@ -226,7 +198,6 @@ export default function PosCart({
             </Select>
           </FormControl>
 
-          {/* MONTO RECIBIDO - SOLO CONTADO */}
           {esContado && (
             <>
               <TextField
@@ -244,21 +215,11 @@ export default function PosCart({
                 }
               />
 
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center"
-                }}
-              >
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <Typography variant="caption" color="text.secondary">
                   Cambio:
                 </Typography>
-                <Typography
-                  variant="body1"
-                  fontWeight="bold"
-                  color={cambio < 0 ? "error" : "success.main"}
-                >
+                <Typography variant="body1" fontWeight="bold" color={cambio < 0 ? "error" : "success.main"}>
                   RD$ {cambio.toFixed(2)}
                 </Typography>
               </Box>
@@ -267,7 +228,6 @@ export default function PosCart({
         </Stack>
       </Box>
 
-      {/* Lista productos */}
       <Box sx={{ flex: 1, overflowY: "auto", p: 2 }}>
         <Stack spacing={2}>
           {items.length === 0 ? (
@@ -311,23 +271,14 @@ export default function PosCart({
                   </Box>
 
                   <Stack direction="row" alignItems="center" spacing={1}>
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDecrement(item)}
-                      disabled={item.cantidad <= 1}
-                    >
+                    <IconButton size="small" onClick={() => handleDecrement(item)} disabled={item.cantidad <= 1}>
                       <RemoveIcon fontSize="small" />
                     </IconButton>
 
                     <TextField
                       type="number"
                       value={item.cantidad}
-                      onChange={(e) =>
-                        handleQuantityChange(
-                          item.id_productos,
-                          parseInt(e.target.value) || 1
-                        )
-                      }
+                      onChange={(e) => handleQuantityChange(item.id_productos, parseInt(e.target.value) || 1)}
                       size="small"
                       sx={{ width: 70 }}
                     />
@@ -336,11 +287,7 @@ export default function PosCart({
                       <AddIcon fontSize="small" />
                     </IconButton>
 
-                    <IconButton
-                      color="error"
-                      onClick={() => removeFromCart(item.id_productos)}
-                      sx={{ ml: 1 }}
-                    >
+                    <IconButton color="error" onClick={() => removeFromCart(item.id_productos)} sx={{ ml: 1 }}>
                       <DeleteIcon />
                     </IconButton>
                   </Stack>
@@ -351,18 +298,16 @@ export default function PosCart({
         </Stack>
       </Box>
 
-      {/* TOTAL Y BOTÓN */}
       <Box sx={{ p: 2, borderTop: 1, borderColor: "divider" }}>
-        {(!clienteSeleccionado || !condicionPagoSeleccionada) &&
-          items.length > 0 && (
-            <Alert severity="warning" sx={{ mb: 1 }}>
-              {!clienteSeleccionado && !condicionPagoSeleccionada
-                ? "Seleccione un cliente y una condición de pago"
-                : !clienteSeleccionado
-                  ? "Seleccione un cliente"
-                  : "Seleccione una condición de pago"}
-            </Alert>
-          )}
+        {(!clienteSeleccionado || !condicionPagoSeleccionada) && items.length > 0 && (
+          <Alert severity="warning" sx={{ mb: 1 }}>
+            {!clienteSeleccionado && !condicionPagoSeleccionada
+              ? "Seleccione un cliente y una condición de pago"
+              : !clienteSeleccionado
+                ? "Seleccione un cliente"
+                : "Seleccione una condición de pago"}
+          </Alert>
+        )}
 
         <Button
           variant="contained"
@@ -381,6 +326,26 @@ export default function PosCart({
         >
           {procesando ? "Procesando..." : `Pagar RD$ ${Number(total).toFixed(2)}`}
         </Button>
+
+        <Button
+          variant="outlined"
+          color="primary"
+          fullWidth
+          size="large"
+          onClick={async () => {
+            if (!clienteSeleccionado || !procesarCotizacion) return;
+            const respuesta = await procesarCotizacion(clienteSeleccionado);
+            if (respuesta.error) {
+              alert(respuesta.error);
+            } else {
+              alert(`Cotización generada: ${respuesta.numero_documento}`);
+            }
+          }}
+          sx={{ mt: 1, py: 1.5, fontWeight: "bold", fontSize: "1rem", borderRadius: 2 }}
+        >
+          Generar Cotización
+        </Button>
+
       </Box>
     </Paper>
   );

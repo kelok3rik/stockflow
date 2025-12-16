@@ -35,6 +35,7 @@ import PagosConsulta from '../pages/Pagos/PagosConsulta.jsx';
 import CobrosConsulta from '../pages/Abonos/CobroConsulta.jsx';
 import FacturasConsulta from '../pages/Factura/FacturaConsulta.jsx';
 import AjusteInventarioConsulta from '../pages/AjusteInventario/AjusteInventarioConsulta.jsx';
+import CotizacionesConsulta from '../pages/Cotizaciones/CotizacionConsulta.jsx';
 
 
 import PosPage from '../pages/Factura/PosPage.jsx';
@@ -440,6 +441,17 @@ export default function AppRoutes() {
             <PermisoRoute permiso="inv_movimientos">
               <DashboardLayout>
                 <AjusteInventarioConsulta />
+              </DashboardLayout>
+            </PermisoRoute>
+          }
+        />
+
+        <Route
+          path="/consultas/cotizaciones"
+          element={
+            <PermisoRoute permiso="inv_cotizaciones">
+              <DashboardLayout>
+                <CotizacionesConsulta />
               </DashboardLayout>
             </PermisoRoute>
           }
